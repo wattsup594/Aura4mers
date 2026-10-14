@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Us | Lost &amp; Found</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --band: #e9eeee;
+    --ink: #24323b;
+    --muted: #5d6b72;
+    --line: #d9e0e1;
+    --slate: #2b3a44;
+    --slate-ink: #e8eef0;
+    --sage: #557a68;
+    --sage-strong: #44665a;
+    --sage-ink: #ffffff;
+    --art: #b7c4cb;
+    --art-deep: #8fa1aa;
+    --font-display: "Outfit", "Segoe UI", system-ui, sans-serif;
+    --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151c20; --surface: #1d262b; --band: #1a2227; --ink: #e6ecee; --muted: #a3b1b7;
+      --line: #2f3c43; --slate: #0f1518; --slate-ink: #e1e8ea; --sage: #7da592; --sage-strong: #8fb7a3;
+      --sage-ink: #0f1a15; --art: #3a4950; --art-deep: #56686f; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151c20; --surface: #1d262b; --band: #1a2227; --ink: #e6ecee; --muted: #a3b1b7;
+    --line: #2f3c43; --slate: #0f1518; --slate-ink: #e1e8ea; --sage: #7da592; --sage-strong: #8fb7a3;
+    --sage-ink: #0f1a15; --art: #3a4950; --art-deep: #56686f; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.6;
+  }
+  h1, h2, h3 { font-family: var(--font-display); margin: 0; line-height: 1.2; text-wrap: balance; }
+  p { margin: 0; }
+  a { color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--sage); outline-offset: 3px; border-radius: 4px; }
+
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  /* Nav */
+  .site-nav { background: var(--slate); color: var(--slate-ink); }
+  .site-nav .wrap {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; padding-block: 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; }
+  .brand svg { width: 30px; height: 30px; }
+  .nav-links { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; font-size: 0.95rem; }
+  .nav-links a { text-decoration: none; opacity: 0.85; }
+  .nav-links a:hover, .nav-links a[aria-current="page"] { opacity: 1; text-decoration: underline; text-underline-offset: 6px; }
+  .btn {
+    display: inline-block; text-decoration: none; font-weight: 600; font-size: 0.92rem;
+    background: var(--sage); color: var(--sage-ink); padding: 9px 16px; border-radius: 8px;
+  }
+  .btn:hover { background: var(--sage-strong); }
+  .nav-links .btn { opacity: 1; }
+  .nav-links .btn:hover { text-decoration: none; }
+
+  section { padding-block: 64px; }
+
+  /* Hero */
+  .hero .wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: clamp(2rem, 4.5vw, 2.9rem); font-weight: 700; }
+  .hero .lede { font-size: 1.25rem; margin-top: 12px; font-weight: 600; color: var(--ink); }
+  .hero .body { margin-top: 22px; color: var(--muted); max-width: 52ch; }
+  .team-tag { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 0.95rem; color: var(--muted); }
+  .team-tag strong { color: var(--ink); }
+  .art { background: var(--band); border-radius: var(--radius); padding: 24px; }
+  .art svg { width: 100%; height: auto; display: block; max-width: 100%; }
+
+  /* Values */
+  .values { background: var(--band); }
+  .values .wrap { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .value { text-align: center; padding: 8px 28px; display: grid; gap: 10px; justify-items: center; }
+  .value + .value { border-left: 1px solid var(--line); }
+  .value svg { width: 48px; height: 48px; color: var(--slate); }
+  .value h3 { font-size: 1.1rem; font-weight: 600; }
+  .value p { color: var(--muted); font-size: 0.95rem; max-width: 30ch; }
+
+  /* Mission */
+  .mission .wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; align-items: center; }
+  .mission h2, .section-head h2 { font-size: 1.8rem; font-weight: 600; }
+  .mission p { margin-top: 14px; color: var(--muted); max-width: 54ch; }
+  .goals { margin: 20px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .goals li { display: flex; gap: 10px; align-items: baseline; color: var(--ink); }
+  .goals li::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--sage); transform: translateY(-2px); }
+
+  /* Team */
+  .team { background: var(--surface); border-block: 1px solid var(--line); }
+  .section-head { display: grid; gap: 8px; margin-bottom: 32px; }
+  .section-head p { color: var(--muted); }
+  .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .member {
+    display: grid; justify-items: center; align-content: start; gap: 4px; text-align: center;
+    padding: 26px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg);
+  }
+  .member .photo { width: 112px; height: 112px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; }
+  .member h3 { font-size: 1.15rem; font-weight: 600; }
+  .member .role { color: var(--sage-strong); font-weight: 600; font-size: 0.95rem; }
+  .member .who { color: var(--muted); font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  .member .bio { color: var(--muted); font-size: 0.93rem; margin-top: 10px; }
+  .member .quote { font-style: italic; font-size: 0.9rem; margin-top: 8px; }
+  .member .email { margin-top: 12px; font-size: 0.9rem; color: var(--ink); user-select: all; word-break: break-all; }
+
+  /* Contact */
+  .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .contact-item { display: flex; gap: 14px; align-items: flex-start; min-width: 0; }
+  .contact-item svg { width: 26px; height: 26px; flex: none; color: var(--slate); margin-top: 2px; }
+  .contact-item h3 { font-size: 1rem; font-weight: 600; }
+  .contact-item p { color: var(--muted); font-size: 0.95rem; }
+  .contact-item .email { user-select: all; word-break: break-all; color: var(--ink); }
+
+  /* Banner */
+  .banner { background: var(--sage); color: var(--sage-ink); padding-block: 40px; }
+  .banner .wrap { display: flex; align-items: center; gap: 24px; }
+  .banner svg { width: 48px; height: 48px; flex: none; }
+  .banner h2 { font-size: 1.35rem; font-weight: 600; }
+  .banner p { margin-top: 6px; opacity: 0.92; }
+
+  /* Footer */
+  footer { background: var(--slate); color: var(--slate-ink); padding-block: 28px; }
+  footer .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+  footer .copy { text-align: center; font-size: 0.85rem; opacity: 0.75; padding-top: 18px; }
+
+  @media (max-width: 860px) {
+    .hero .wrap, .mission .wrap { grid-template-columns: 1fr; gap: 32px; }
+    .team-grid { grid-template-columns: repeat(2, 1fr); }
+    .contact-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    section { padding-block: 44px; }
+    .values .wrap { grid-template-columns: 1fr; gap: 28px; }
+    .value + .value { border-left: 0; border-top: 1px solid var(--line); padding-top: 28px; }
+    .team-grid { grid-template-columns: 1fr; }
+    .banner .wrap { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Shared icon: the Lost & Found box -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="cube" viewBox="0 0 32 32">
+    <path d="M16 3 4 9.5v13L16 29l12-6.5v-13L16 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M4 9.5 16 16l12-6.5M16 16v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    <path d="m10 6.3 12 6.5" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+</svg>
+
+<header class="site-nav">
+  <div class="wrap">
+    <a class="brand" href="index.html"><svg aria-hidden="true"><use href="#cube"/></svg>Lost &amp; Found</a>
+    <nav aria-label="Main">
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html" aria-current="page">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a class="btn" href="report.html">Report an Item</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <h1>About Lost &amp; Found</h1>
+        <p class="lede">Helping our community, one item at a time.</p>
+        <p class="body">
+          Lost &amp; Found was created to make it easier for people to find their missing belongings
+          and return found items to their rightful owners. It's a simple, community-focused board
+          for the students, faculty, and staff at our school, built on trust, kindness, and connection.
+        </p>
+        <div class="team-tag">
+          <span>Built by <strong>Team Aura 4mers</strong></span>
+          <span><em>"It's not about the journey, it's about the result."</em></span>
+        </div>
+      </div>
+      <div class="art" aria-hidden="true">
+        <svg viewBox="0 0 320 240">
+          <path d="M0 170 C60 120 110 150 160 120 S260 90 320 120 V240 H0Z" fill="var(--art)" opacity="0.55"/>
+          <ellipse cx="160" cy="210" rx="92" ry="14" fill="var(--art-deep)" opacity="0.45"/>
+          <path d="M160 92 98 124v66l62 30 62-30v-66L160 92Z" fill="var(--art)"/>
+          <path d="M98 124l62 32 62-32" fill="none" stroke="var(--bg)" stroke-width="3"/>
+          <path d="M160 156v64" stroke="var(--bg)" stroke-width="3"/>
+          <path d="M160 156v64l62-30v-66Z" fill="var(--art-deep)"/>
+          <path d="M160 20c-20 0-34 15-34 33 0 24 34 56 34 56s34-32 34-56c0-18-14-33-34-33Z" fill="var(--slate)"/>
+          <circle cx="160" cy="53" r="12" fill="var(--bg)"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="values" aria-label="What we stand for">
+    <div class="wrap">
+      <div class="value">
+        <svg viewBox="0 0 48 48" aria-hidden="true" fill="currentColor">
+          <circle cx="17" cy="15" r="7"/><circle cx="32" cy="16" r="6"/>
+          <path d="M4 38c0-8 6-13 13-13s13 5 13 13Z"/><path d="M28 26.5c1.3-.3 2.6-.5 4-.5 6.6 0 12 4.6 12 11.5H32.5c0-4.4-1.6-8.2-4.5-11Z"/>
+        </svg>
+        <h3>Community Driven</h3>
+        <p>We're built by and for our school. Every report helps someone get their item back.</p>
+      </div>
+      <div class="value">
+        <svg viewBox="0 0 48 48"
