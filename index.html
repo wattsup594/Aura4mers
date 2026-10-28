@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home | Lost & Found</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body data-page="home">
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html">
+        <span class="brand-icon">⬡</span>
+        Lost & Found
+      </a>
+
+      <button class="menu-toggle"
+              aria-label="Toggle navigation"
+              aria-expanded="false">☰</button>
+
+      <nav class="nav-links">
+        <a href="index.html" class="active">Home</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <button class="btn btn-primary report-trigger">
+          Report an Item
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-layout">
+        <div class="hero-copy">
+          <h1>Lost something?<br>Found something?</h1>
+          <p class="hero-subtitle">We're here to help.</p>
+
+          <p>
+            Lost & Found connects people with their
+            missing items. Browse recent reports, or
+            submit your own lost or found item.
+          </p>
+
+          <div class="button-row">
+            <a href="#recent-items" class="btn btn-primary">
+              Browse Items
+            </a>
+            <button class="btn btn-outline report-trigger">
+              Report an Item
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-illustration" aria-hidden="true">
+          <div class="hero-glow"></div>
+          <div class="pin">●</div>
+          <div class="cube"></div>
+          <div class="cube-shadow"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container" id="recent-items">
+      <div class="section-heading">
+        <h2>Recent Items</h2>
+        <span id="item-count"></span>
+      </div>
+
+      <div class="filters">
+        <input type="search"
+               id="search-items"
+               placeholder="Search by item or location...">
+
+        <select id="filter-type">
+          <option value="all">All Items</option>
+          <option value="lost">Lost</option>
+          <option value="found">Found</option>
+        </select>
+      </div>
+
+      <div class="item-grid" id="item-grid"
+           aria-live="polite"></div>
+
+      <p class="empty-state" id="empty-state" hidden>
+        No items match your search.
+      </p>
+    </section>
+
+    <section class="steps-section">
+      <div class="container section">
+        <h2>How It Works</h2>
+
+        <div class="steps-grid">
+          <article>
+            <span class="step-number">1</span>
+            <h3>Report</h3>
+            <p>Submit a lost or found item with details.</p>
+          </article>
+
+          <article>
+            <span class="step-number">2</span>
+            <h3>Search</h3>
+            <p>Browse recent items or search for yours.</p>
+          </article>
+
+          <article>
+            <span class="step-number">3</span>
+            <h3>Reunite</h3>
+            <p>Help connect an item with its owner.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="banner">
+      <div class="container banner-inner">
+        <span class="banner-icon">♡</span>
+
+        <div>
+          <h2>Small items make a big difference.</h2>
+          <p>
+            Together, we can help get lost items
+            back to their owners.
+          </p>
+        </div>
+
+        <button class="btn btn-light report-trigger">
+          Report an Item
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-top">
+      <a class="brand" href="index.html">⬡ Lost & Found</a>
+
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+
+    <div class="container footer-bottom">
+      © <span class="year"></span> Lost & Found.
+      All rights reserved.
+    </div>
+  </footer>
+
+  <dialog id="report-dialog" class="dialog">
+    <form id="report-form" class="dialog-panel">
+      <div class="dialog-heading">
+        <h2>Report an Item</h2>
+        <button type="button" class="close-dialog">×</button>
+      </div>
+
+      <p>Reports are saved in this browser.</p>
+
+      <div class="form-grid">
+        <label>
+          Report type *
+          <select name="type" required>
+            <option value="lost">I lost something</option>
+            <option value="found">I found something</option>
+          </select>
+        </label>
+
+        <label>
+          Item name *
+          <input name="name" required maxlength="60">
+        </label>
+
+        <label>
+          Location *
+          <input name="location" required maxlength="80">
+        </label>
+
+        <label>
+          Date *
+          <input name="date" type="date" required>
+        </label>
+
+        <label class="full">
+          Description *
+          <textarea name="description"
+                    rows="4" required></textarea>
+        </label>
+
+        <label class="full">
+          Contact email *
+          <input name="email" type="email" required>
+        </label>
+      </div>
+
+      <button type="submit"
+              class="btn btn-primary form-submit">
+        Submit Report
+      </button>
+
+      <p id="report-feedback" class="form-feedback"></p>
+    </form>
+  </dialog>
+</body>
+</html>

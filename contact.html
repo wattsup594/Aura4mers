@@ -1,0 +1,232 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact | Lost & Found</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body data-page="contact">
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html">
+        ⬡ Lost & Found
+      </a>
+
+      <button class="menu-toggle"
+              aria-label="Toggle navigation"
+              aria-expanded="false">☰</button>
+
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="contact.html" class="active">Contact</a>
+        <button class="btn btn-primary report-trigger">
+          Report an Item
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="contact-hero">
+      <div class="container contact-hero-grid">
+        <div>
+          <h1>Get in Touch</h1>
+          <p>
+            Have a question, need help, or want
+            to report something? We'd love to
+            hear from you.
+          </p>
+        </div>
+
+        <div class="mail-illustration">✉</div>
+      </div>
+    </section>
+
+    <section class="section container contact-layout">
+      <div class="contact-form-panel">
+        <h2>Send Us a Message</h2>
+
+        <form id="contact-form">
+          <label for="contact-name">Name *</label>
+          <input type="text"
+                 id="contact-name"
+                 name="name"
+                 placeholder="Your name"
+                 required>
+
+          <label for="contact-email">Email *</label>
+          <input type="email"
+                 id="contact-email"
+                 name="email"
+                 placeholder="your@email.com"
+                 required>
+
+          <label for="contact-subject">Subject *</label>
+          <select id="contact-subject"
+                  name="subject" required>
+            <option value="">Select a topic</option>
+            <option>Lost item</option>
+            <option>Found item</option>
+            <option>Website feedback</option>
+            <option>Other question</option>
+          </select>
+
+          <label for="contact-message">Message *</label>
+          <textarea id="contact-message"
+                    name="message"
+                    rows="6"
+                    placeholder="How can we help you?"
+                    required></textarea>
+
+          <button type="submit"
+                  class="btn btn-primary form-submit">
+            Send Message
+          </button>
+
+          <p id="contact-feedback"
+             class="form-feedback"
+             role="status"></p>
+        </form>
+      </div>
+
+      <aside class="contact-sidebar">
+        <div class="info-line">
+          <span class="info-icon">●</span>
+          <div>
+            <h3>Our Location</h3>
+            <p>Rexburg, ID 83440<br>BYU-Idaho area</p>
+          </div>
+        </div>
+
+        <div class="info-line">
+          <span class="info-icon">✉</span>
+          <div>
+            <h3>Email Us</h3>
+            <p>Contact address to be added</p>
+          </div>
+        </div>
+
+        <div class="info-line">
+          <span class="info-icon">◷</span>
+          <div>
+            <h3>Response Time</h3>
+            <p>Messages are not sent in this demo.</p>
+          </div>
+        </div>
+
+        <hr>
+
+        <h3>Follow Us</h3>
+        <p>Stay updated and help spread the word!</p>
+      </aside>
+    </section>
+
+    <section class="faq-section">
+      <div class="container section">
+        <h2>Frequently Asked Questions</h2>
+        <p>You might find your answer here.</p>
+
+        <div class="faq-list">
+          <details>
+            <summary>How do I report a lost item?</summary>
+            <p>
+              Click Report an Item and fill out the form.
+            </p>
+          </details>
+
+          <details>
+            <summary>How do I contact an owner?</summary>
+            <p>
+              Click an item card to see its available
+              contact information.
+            </p>
+          </details>
+
+          <details>
+            <summary>Are reports shared with everyone?</summary>
+            <p>
+              Not yet. Reports are currently saved
+              in your own browser.
+            </p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-top">
+      <a class="brand" href="index.html">⬡ Lost & Found</a>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+
+    <div class="container footer-bottom">
+      © <span class="year"></span> Lost & Found.
+      All rights reserved.
+    </div>
+  </footer>
+
+   <dialog id="report-dialog" class="dialog">
+    <form id="report-form" class="dialog-panel">
+      <div class="dialog-heading">
+        <h2>Report an Item</h2>
+        <button type="button" class="close-dialog">×</button>
+      </div>
+
+      <p>Reports are saved in this browser.</p>
+
+      <div class="form-grid">
+        <label>
+          Report type *
+          <select name="type" required>
+            <option value="lost">I lost something</option>
+            <option value="found">I found something</option>
+          </select>
+        </label>
+
+        <label>
+          Item name *
+          <input name="name" required maxlength="60">
+        </label>
+
+        <label>
+          Location *
+          <input name="location" required maxlength="80">
+        </label>
+
+        <label>
+          Date *
+          <input name="date" type="date" required>
+        </label>
+
+        <label class="full">
+          Description *
+          <textarea name="description"
+                    rows="4" required></textarea>
+        </label>
+
+        <label class="full">
+          Contact email *
+          <input name="email" type="email" required>
+        </label>
+      </div>
+
+      <button type="submit"
+              class="btn btn-primary form-submit">
+        Submit Report
+      </button>
+
+      <p id="report-feedback" class="form-feedback"></p>
+    </form>
+  </dialog>
+</body>
+</html>
