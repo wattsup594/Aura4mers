@@ -325,15 +325,43 @@ if (typeFilter) {
 // Display reports when the homepage opens.
 renderItems();
 
-// Display all found items in a separate section.
+// Display and browse all found items.
 function renderFoundItems() {
   const grid = document.querySelector("#found-item-grid");
 
   if (!grid) return;
 
-  const foundItems = [...savedReports().reverse(), ...defaultItems].filter(
-    (item) => item.type === "found",
+  const search = document
+    .querySelector("#search-found-items")
+    .value.trim()
+    .toLowerCase();
+
+  const sort = document.querySelector("#sort-found-items").value;
+
+  let foundItems = [...savedReports().reverse(), ...defaultItems].filter(
+    (item) => {
+      if (item.type !== "found") return false;
+
+      const searchText = (
+        item.name +
+        " " +
+        item.location +
+        " " +
+        item.description
+      ).toLowerCase();
+
+      return searchText.includes(search);
+    },
   );
+
+  // Sort found items.
+  if (sort === "newest") {
+    foundItems.sort((a, b) => b.date.localeCompare(a.date));
+  } else if (sort === "oldest") {
+    foundItems.sort((a, b) => a.date.localeCompare(b.date));
+  } else if (sort === "name") {
+    foundItems.sort((a, b) => a.name.localeCompare(b.name));
+  }
 
   grid.replaceChildren();
 
@@ -343,55 +371,22 @@ function renderFoundItems() {
   document.querySelector("#found-empty-state").hidden = foundItems.length > 0;
 
   foundItems.forEach((item) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "item-card";
-
-    const art = document.createElement("span");
-    art.className = "item-art";
-    art.textContent = item.icon || itemIcon(item.name);
-
-    const body = document.createElement("span");
-    body.className = "item-body";
-
-    const title = document.createElement("strong");
-    title.textContent = item.name;
-
-    const status = document.createElement("span");
-    status.className = "status found";
-    status.textContent = "Found";
-
-    const date = document.createElement("span");
-    date.className = "meta";
-    date.textContent = formatDate(item.date);
-
-    const location = document.createElement("span");
-    location.className = "meta";
-    location.textContent = "📍 " + item.location;
-
-    body.append(title, status, date, location);
-    card.append(art, body);
-
-    card.addEventListener("click", () => {
-      alert(
-        item.name +
-          "\n\n" +
-          "Date: " +
-          formatDate(item.date) +
-          "\n" +
-          "Location: " +
-          item.location +
-          "\n\n" +
-          item.description +
-          "\n\n" +
-          (item.email
-            ? "Contact: " + item.email
-            : "No contact information available."),
-      );
-    });
-
-    grid.append(card);
+    grid.append(createItemCard(item));
   });
+}
+
+// Search found items.
+const foundSearch = document.querySelector("#search-found-items");
+
+if (foundSearch) {
+  foundSearch.addEventListener("input", renderFoundItems);
+}
+
+// Sort found items.
+const foundSort = document.querySelector("#sort-found-items");
+
+if (foundSort) {
+  foundSort.addEventListener("change", renderFoundItems);
 }
 
 // Contact form demonstration.
