@@ -611,3 +611,37 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* Logo */
+.brand-logo {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+@media (max-width: 600px) {
+  .brand-logo {
+    height: 34px;
+  }
+}
+
+/* Custom cursor: the search (magnifier) icon from the logo.
+   The hotspot (14 14) sits in the center of the lens. */
+html,
+body,
+a,
+button,
+label,
+select,
+.btn,
+.faq-list summary {
+  cursor: url("cursor-search.png") 14 14, auto;
+  cursor: -webkit-image-set(url("cursor-search.png") 1x, url("cursor-search@2x.png") 2x) 14 14, auto;
+  cursor: image-set(url("cursor-search.png") 1x, url("cursor-search@2x.png") 2x) 14 14, auto;
+}
+
+/* Keep the normal text cursor where people type */
+input,
+textarea {
+  cursor: text;
+}
