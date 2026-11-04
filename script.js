@@ -1,4 +1,3 @@
-
 "use strict";
 
 // Store reports in the browser.
@@ -14,7 +13,7 @@ const defaultItems = [
     location: "Student Center",
     description: "Black backpack with multiple pockets.",
     icon: "🎒",
-    email: ""
+    email: "",
   },
   {
     id: "demo-2",
@@ -24,7 +23,7 @@ const defaultItems = [
     location: "Library",
     description: "Phone with a dark case.",
     icon: "📱",
-    email: ""
+    email: "",
   },
   {
     id: "demo-3",
@@ -34,7 +33,7 @@ const defaultItems = [
     location: "Dining Hall",
     description: "Reusable blue water bottle.",
     icon: "🧴",
-    email: ""
+    email: "",
   },
   {
     id: "demo-4",
@@ -44,16 +43,14 @@ const defaultItems = [
     location: "Parking Lot",
     description: "Small keyring lost near the parking lot.",
     icon: "🔑",
-    email: ""
-  }
+    email: "",
+  },
 ];
 
 // Get previously saved reports.
 function savedReports() {
   try {
-    const stored = JSON.parse(
-      localStorage.getItem(STORAGE_KEY) || "[]"
-    );
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
     return Array.isArray(stored) ? stored : [];
   } catch (error) {
@@ -103,7 +100,7 @@ function formatDate(value) {
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric"
+    year: "numeric",
   });
 }
 
@@ -116,23 +113,23 @@ function renderItems() {
     return;
   }
 
-  const query = document.querySelector("#search-items")
-    .value.trim().toLowerCase();
+  const query = document
+    .querySelector("#search-items")
+    .value.trim()
+    .toLowerCase();
 
   const type = document.querySelector("#filter-type").value;
 
-  const items = [
-    ...savedReports().reverse(),
-    ...defaultItems
-  ];
+  const items = [...savedReports().reverse(), ...defaultItems];
 
-  const filteredItems = items.filter(item => {
-    const matchesType =
-      type === "all" || item.type === type;
+  const filteredItems = items.filter((item) => {
+    const matchesType = type === "all" || item.type === type;
 
     const searchText = (
-      item.name + " " +
-      item.location + " " +
+      item.name +
+      " " +
+      item.location +
+      " " +
       item.description
     ).toLowerCase();
 
@@ -145,11 +142,10 @@ function renderItems() {
   document.querySelector("#item-count").textContent =
     filteredItems.length + " items";
 
-  document.querySelector("#empty-state").hidden =
-    filteredItems.length > 0;
+  document.querySelector("#empty-state").hidden = filteredItems.length > 0;
 
   // Create a card for each item.
-  filteredItems.forEach(item => {
+  filteredItems.forEach((item) => {
     const card = document.createElement("button");
     card.type = "button";
     card.className = "item-card";
@@ -166,8 +162,7 @@ function renderItems() {
 
     const status = document.createElement("span");
     status.className = "status " + item.type;
-    status.textContent =
-      item.type === "found" ? "Found" : "Lost";
+    status.textContent = item.type === "found" ? "Found" : "Lost";
 
     const date = document.createElement("span");
     date.className = "meta";
@@ -187,12 +182,19 @@ function renderItems() {
         : "No contact information available.";
 
       alert(
-        item.name + "\n\n" +
-        item.type.toUpperCase() + "\n" +
-        "Date: " + formatDate(item.date) + "\n" +
-        "Location: " + item.location + "\n\n" +
-        item.description + "\n\n" +
-        contact
+        item.name +
+          "\n\n" +
+          item.type.toUpperCase() +
+          "\n" +
+          "Date: " +
+          formatDate(item.date) +
+          "\n" +
+          "Location: " +
+          item.location +
+          "\n\n" +
+          item.description +
+          "\n\n" +
+          contact,
       );
     });
 
@@ -208,15 +210,12 @@ if (menuButton && nav) {
   menuButton.addEventListener("click", () => {
     const opened = nav.classList.toggle("open");
 
-    menuButton.setAttribute(
-      "aria-expanded",
-      String(opened)
-    );
+    menuButton.setAttribute("aria-expanded", String(opened));
   });
 }
 
 // Automatically update footer year.
-document.querySelectorAll(".year").forEach(year => {
+document.querySelectorAll(".year").forEach((year) => {
   year.textContent = new Date().getFullYear();
 });
 
@@ -225,18 +224,15 @@ const dialog = document.querySelector("#report-dialog");
 const reportForm = document.querySelector("#report-form");
 
 // Open the report dialog.
-document.querySelectorAll(".report-trigger").forEach(button => {
+document.querySelectorAll(".report-trigger").forEach((button) => {
   button.addEventListener("click", () => {
     if (dialog && reportForm) {
       reportForm.reset();
 
-      const dateField = reportForm.querySelector(
-        '[name="date"]'
-      );
+      const dateField = reportForm.querySelector('[name="date"]');
 
       if (dateField) {
-        dateField.value = new Date()
-          .toLocaleDateString("en-CA");
+        dateField.value = new Date().toLocaleDateString("en-CA");
       }
 
       dialog.showModal();
@@ -252,7 +248,7 @@ if (closeButton && dialog) {
     dialog.close();
   });
 
-  dialog.addEventListener("click", event => {
+  dialog.addEventListener("click", (event) => {
     if (event.target === dialog) {
       dialog.close();
     }
@@ -261,7 +257,7 @@ if (closeButton && dialog) {
 
 // Save newly reported items.
 if (reportForm) {
-  reportForm.addEventListener("submit", event => {
+  reportForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
     const data = new FormData(reportForm);
@@ -273,7 +269,7 @@ if (reportForm) {
       location: String(data.get("location")).trim(),
       date: String(data.get("date")),
       description: String(data.get("description")).trim(),
-      email: String(data.get("email")).trim()
+      email: String(data.get("email")).trim(),
     };
 
     if (
@@ -290,10 +286,7 @@ if (reportForm) {
 
       reports.push(report);
 
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(reports)
-      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
 
       reportForm.reset();
       dialog.close();
@@ -304,7 +297,8 @@ if (reportForm) {
 
         renderItems();
 
-        document.querySelector("#recent-items")
+        document
+          .querySelector("#recent-items")
           .scrollIntoView({ behavior: "smooth" });
       } else {
         window.location.href = "index.html#recent-items";
@@ -331,16 +325,83 @@ if (typeFilter) {
 // Display reports when the homepage opens.
 renderItems();
 
+// Display all found items in a separate section.
+function renderFoundItems() {
+  const grid = document.querySelector("#found-item-grid");
+
+  if (!grid) return;
+
+  const foundItems = [...savedReports().reverse(), ...defaultItems].filter(
+    (item) => item.type === "found",
+  );
+
+  grid.replaceChildren();
+
+  document.querySelector("#found-item-count").textContent =
+    foundItems.length + " found items";
+
+  document.querySelector("#found-empty-state").hidden = foundItems.length > 0;
+
+  foundItems.forEach((item) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "item-card";
+
+    const art = document.createElement("span");
+    art.className = "item-art";
+    art.textContent = item.icon || itemIcon(item.name);
+
+    const body = document.createElement("span");
+    body.className = "item-body";
+
+    const title = document.createElement("strong");
+    title.textContent = item.name;
+
+    const status = document.createElement("span");
+    status.className = "status found";
+    status.textContent = "Found";
+
+    const date = document.createElement("span");
+    date.className = "meta";
+    date.textContent = formatDate(item.date);
+
+    const location = document.createElement("span");
+    location.className = "meta";
+    location.textContent = "📍 " + item.location;
+
+    body.append(title, status, date, location);
+    card.append(art, body);
+
+    card.addEventListener("click", () => {
+      alert(
+        item.name +
+          "\n\n" +
+          "Date: " +
+          formatDate(item.date) +
+          "\n" +
+          "Location: " +
+          item.location +
+          "\n\n" +
+          item.description +
+          "\n\n" +
+          (item.email
+            ? "Contact: " + item.email
+            : "No contact information available."),
+      );
+    });
+
+    grid.append(card);
+  });
+}
+
 // Contact form demonstration.
 const contactForm = document.querySelector("#contact-form");
 
 if (contactForm) {
-  contactForm.addEventListener("submit", event => {
+  contactForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
-    const feedback = document.querySelector(
-      "#contact-feedback"
-    );
+    const feedback = document.querySelector("#contact-feedback");
 
     feedback.textContent =
       "Your form is complete! This demo does not " +
