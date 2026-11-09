@@ -146,6 +146,12 @@ function renderItems() {
 
   // Create a card for each item.
   filteredItems.forEach((item) => {
+    grid.append(createItemCard(item));
+  });
+}
+
+// Build one item card (used by both item lists).
+function createItemCard(item) {
     const card = document.createElement("button");
     card.type = "button";
     card.className = "item-card";
@@ -198,8 +204,7 @@ function renderItems() {
       );
     });
 
-    grid.append(card);
-  });
+    return card;
 }
 
 // Mobile navigation menu.
@@ -296,6 +301,7 @@ if (reportForm) {
         document.querySelector("#filter-type").value = "all";
 
         renderItems();
+        renderFoundItems();
 
         document
           .querySelector("#recent-items")
@@ -388,6 +394,17 @@ const foundSort = document.querySelector("#sort-found-items");
 if (foundSort) {
   foundSort.addEventListener("change", renderFoundItems);
 }
+
+// Display found items when the homepage opens.
+renderFoundItems();
+
+// Update both lists live when reports change in another tab.
+window.addEventListener("storage", (event) => {
+  if (event.key === STORAGE_KEY) {
+    renderItems();
+    renderFoundItems();
+  }
+});
 
 // Contact form demonstration.
 const contactForm = document.querySelector("#contact-form");
