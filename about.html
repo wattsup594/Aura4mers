@@ -12,60 +12,6 @@
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
 </head>
-<dialog id="report-dialog" class="dialog">
-    <form id="report-form" class="dialog-panel">
-      <div class="dialog-heading">
-        <h2>Report an Item</h2>
-        <button type="button" class="close-dialog">×</button>
-      </div>
-
-      <p>Reports are saved in this browser.</p>
-
-      <div class="form-grid">
-        <label>
-          Report type *
-          <select name="type" required>
-            <option value="lost">I lost something</option>
-            <option value="found">I found something</option>
-          </select>
-        </label>
-
-        <label>
-          Item name *
-          <input name="name" required maxlength="60">
-        </label>
-
-        <label>
-          Location *
-          <input name="location" required maxlength="80">
-        </label>
-
-        <label>
-          Date *
-          <input name="date" type="date" required>
-        </label>
-
-        <label class="full">
-          Description *
-          <textarea name="description"
-                    rows="4" required></textarea>
-        </label>
-
-        <label class="full">
-          Contact email *
-          <input name="email" type="email" required>
-        </label>
-      </div>
-
-      <button type="submit"
-              class="btn btn-primary form-submit">
-        Submit Report
-      </button>
-
-      <p id="report-feedback" class="form-feedback"></p>
-    </form>
-  </dialog>
-
 <body data-page="about">
   <header class="site-header">
     <div class="container nav-wrap">
@@ -166,6 +112,61 @@
       </div>
     </section>
 
+    <section class="section container team-section" id="team">
+      <h2>Meet the Team</h2>
+      <p class="section-intro">
+        Lost &amp; Found is built by a four-person student team.
+        Reach out to any of us with questions about the site.
+      </p>
+
+      <div class="team-grid">
+        <article class="team-card">
+          <img class="team-photo" src="images/team/diwesh-ghimire.svg"
+               alt="Photo of Diwesh Ghimire" width="120" height="120">
+          <h3>Diwesh Ghimire</h3>
+          <p class="team-role">Design &amp; Branding</p>
+          <p>Creates the site's look: colors, fonts, logo, and images.</p>
+          <a href="mailto:diwesh.ghimire@example.com">diwesh.ghimire@example.com</a>
+        </article>
+
+        <article class="team-card">
+          <img class="team-photo" src="images/team/adam-querubin.svg"
+               alt="Photo of Adam Querubin" width="120" height="120">
+          <h3>Adam Querubin</h3>
+          <p class="team-role">Site Structure &amp; Data</p>
+          <p>Plans the site outline and keeps the found-items list up to date.</p>
+          <a href="mailto:adam.querubin@example.com">adam.querubin@example.com</a>
+        </article>
+
+        <article class="team-card">
+          <img class="team-photo" src="images/team/kaden-watts.svg"
+               alt="Photo of Kaden Watts" width="120" height="120">
+          <h3>Kaden Watts</h3>
+          <p class="team-role">Site Lead &amp; Navigation</p>
+          <p>Set up the site and built the home page and navigation.</p>
+          <a href="mailto:kaden.watts@example.com">kaden.watts@example.com</a>
+        </article>
+
+        <article class="team-card">
+          <img class="team-photo" src="images/team/chris-titus.svg"
+               alt="Photo of Chris Titus" width="120" height="120">
+          <h3>Chris Titus</h3>
+          <p class="team-role">Forms &amp; Shared Resources</p>
+          <p>Builds the report form and manages the team's shared files.</p>
+          <a href="mailto:chris.titus@example.com">chris.titus@example.com</a>
+        </article>
+      </div>
+
+      <div class="team-contact">
+        <h3>Contact the Team</h3>
+        <p>
+          Email: <a href="mailto:lostandfound@example.com">lostandfound@example.com</a><br>
+          Phone: (208) 555-0142<br>
+          Location: Rexburg, ID 83440 (BYU-Idaho area)
+        </p>
+      </div>
+    </section>
+
     <section class="banner">
       <div class="container banner-inner">
         <span class="banner-icon">♧</span>
@@ -196,6 +197,63 @@
     </div>
   </footer>
 
-  <!-- Copy the report-dialog from index.html here. -->
-</body>
+
+    <dialog id="report-dialog" class="dialog" aria-labelledby="report-title">
+      <form id="report-form" class="dialog-panel">
+        <div class="dialog-heading">
+          <h2 id="report-title">Report an Item</h2>
+          <button type="button" class="close-dialog" aria-label="Close report form">×</button>
+        </div>
+
+        <p>Fields marked * are required. Your report is added to our shared list of lost and found items.</p>
+
+        <div class="form-grid">
+          <label>
+            Report type *
+            <select name="type" required>
+              <option value="lost">I lost something</option>
+              <option value="found">I found something</option>
+            </select>
+          </label>
+
+          <label>
+            Item name *
+            <input name="name" required maxlength="60" autocomplete="off" placeholder="e.g. Black backpack" />
+          </label>
+
+          <label>
+            Location *
+            <input name="location" required maxlength="80" autocomplete="off" placeholder="e.g. Library, 2nd floor" />
+          </label>
+
+          <label>
+            Date *
+            <input name="date" type="date" required />
+          </label>
+
+          <label class="full">
+            Description *
+            <textarea name="description" rows="4" required maxlength="1000" placeholder="Color, brand, size, anything that helps identify it"></textarea>
+          </label>
+
+          <label class="full">
+            Photo of the item (optional)
+            <input name="photo" type="file" accept="image/jpeg,image/png,image/gif,image/webp" aria-describedby="photo-hint" />
+            <span id="photo-hint" class="field-hint">JPG, PNG, GIF, or WebP. Large photos are resized automatically.</span>
+          </label>
+
+          <label class="full">
+            Contact email *
+            <input name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary form-submit">
+          Submit Report
+        </button>
+
+        <p id="report-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+      </form>
+    </dialog>
+  </body>
 </html>
