@@ -109,7 +109,7 @@
           <span class="info-icon">✉</span>
           <div>
             <h3>Email Us</h3>
-            <p>Contact address to be added</p>
+            <p><a href="mailto:lostandfound@example.com">lostandfound@example.com</a></p>
           </div>
         </div>
 
@@ -152,8 +152,8 @@
           <details>
             <summary>Are reports shared with everyone?</summary>
             <p>
-              Not yet. Reports are currently saved
-              in your own browser.
+              Yes. Reports are added to our shared list,
+              so everyone can see them on the home page.
             </p>
           </details>
         </div>
@@ -177,58 +177,63 @@
     </div>
   </footer>
 
-   <dialog id="report-dialog" class="dialog">
-    <form id="report-form" class="dialog-panel">
-      <div class="dialog-heading">
-        <h2>Report an Item</h2>
-        <button type="button" class="close-dialog">×</button>
-      </div>
 
-      <p>Reports are saved in this browser.</p>
+    <dialog id="report-dialog" class="dialog" aria-labelledby="report-title">
+      <form id="report-form" class="dialog-panel">
+        <div class="dialog-heading">
+          <h2 id="report-title">Report an Item</h2>
+          <button type="button" class="close-dialog" aria-label="Close report form">×</button>
+        </div>
 
-      <div class="form-grid">
-        <label>
-          Report type *
-          <select name="type" required>
-            <option value="lost">I lost something</option>
-            <option value="found">I found something</option>
-          </select>
-        </label>
+        <p>Fields marked * are required. Your report is added to our shared list of lost and found items.</p>
 
-        <label>
-          Item name *
-          <input name="name" required maxlength="60">
-        </label>
+        <div class="form-grid">
+          <label>
+            Report type *
+            <select name="type" required>
+              <option value="lost">I lost something</option>
+              <option value="found">I found something</option>
+            </select>
+          </label>
 
-        <label>
-          Location *
-          <input name="location" required maxlength="80">
-        </label>
+          <label>
+            Item name *
+            <input name="name" required maxlength="60" autocomplete="off" placeholder="e.g. Black backpack" />
+          </label>
 
-        <label>
-          Date *
-          <input name="date" type="date" required>
-        </label>
+          <label>
+            Location *
+            <input name="location" required maxlength="80" autocomplete="off" placeholder="e.g. Library, 2nd floor" />
+          </label>
 
-        <label class="full">
-          Description *
-          <textarea name="description"
-                    rows="4" required></textarea>
-        </label>
+          <label>
+            Date *
+            <input name="date" type="date" required />
+          </label>
 
-        <label class="full">
-          Contact email *
-          <input name="email" type="email" required>
-        </label>
-      </div>
+          <label class="full">
+            Description *
+            <textarea name="description" rows="4" required maxlength="1000" placeholder="Color, brand, size, anything that helps identify it"></textarea>
+          </label>
 
-      <button type="submit"
-              class="btn btn-primary form-submit">
-        Submit Report
-      </button>
+          <label class="full">
+            Photo of the item (optional)
+            <input name="photo" type="file" accept="image/jpeg,image/png,image/gif,image/webp" aria-describedby="photo-hint" />
+            <span id="photo-hint" class="field-hint">JPG, PNG, GIF, or WebP. Large photos are resized automatically.</span>
+          </label>
 
-      <p id="report-feedback" class="form-feedback"></p>
-    </form>
-  </dialog>
-</body>
+          <label class="full">
+            Contact email *
+            <input name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary form-submit">
+          Submit Report
+        </button>
+
+        <p id="report-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+      </form>
+    </dialog>
+  </body>
 </html>

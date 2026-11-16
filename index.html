@@ -176,14 +176,15 @@
       </div>
     </footer>
 
-    <dialog id="report-dialog" class="dialog">
+  
+    <dialog id="report-dialog" class="dialog" aria-labelledby="report-title">
       <form id="report-form" class="dialog-panel">
         <div class="dialog-heading">
-          <h2>Report an Item</h2>
-          <button type="button" class="close-dialog">×</button>
+          <h2 id="report-title">Report an Item</h2>
+          <button type="button" class="close-dialog" aria-label="Close report form">×</button>
         </div>
 
-        <p>Reports are saved in this browser.</p>
+        <p>Fields marked * are required. Your report is added to our shared list of lost and found items.</p>
 
         <div class="form-grid">
           <label>
@@ -196,12 +197,12 @@
 
           <label>
             Item name *
-            <input name="name" required maxlength="60" />
+            <input name="name" required maxlength="60" autocomplete="off" placeholder="e.g. Black backpack" />
           </label>
 
           <label>
             Location *
-            <input name="location" required maxlength="80" />
+            <input name="location" required maxlength="80" autocomplete="off" placeholder="e.g. Library, 2nd floor" />
           </label>
 
           <label>
@@ -211,12 +212,18 @@
 
           <label class="full">
             Description *
-            <textarea name="description" rows="4" required></textarea>
+            <textarea name="description" rows="4" required maxlength="1000" placeholder="Color, brand, size, anything that helps identify it"></textarea>
+          </label>
+
+          <label class="full">
+            Photo of the item (optional)
+            <input name="photo" type="file" accept="image/jpeg,image/png,image/gif,image/webp" aria-describedby="photo-hint" />
+            <span id="photo-hint" class="field-hint">JPG, PNG, GIF, or WebP. Large photos are resized automatically.</span>
           </label>
 
           <label class="full">
             Contact email *
-            <input name="email" type="email" required />
+            <input name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
           </label>
         </div>
 
@@ -224,7 +231,7 @@
           Submit Report
         </button>
 
-        <p id="report-feedback" class="form-feedback"></p>
+        <p id="report-feedback" class="form-feedback" role="status" aria-live="polite"></p>
       </form>
     </dialog>
   </body>
