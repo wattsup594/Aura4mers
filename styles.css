@@ -1025,3 +1025,110 @@ h1 {
     transform: none;
   }
 }
+
+/* ===== Polish pass (additive) ===== */
+
+/* Tighter, more even section spacing */
+.section {
+  padding: 44px 0;
+}
+
+.stats-row + .section {
+  padding-top: 36px;
+}
+
+/* Search box: magnifier icon + green focus ring */
+input[type="search"] {
+  padding-left: 40px;
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23526579' stroke-width='2' stroke-linecap='round' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 13px center;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px #4e806e33;
+}
+
+.filters input,
+.filters select {
+  border-radius: 10px;
+}
+
+/* Real photos: soft frame so they sit nicely next to the icon cards */
+.item-art:has(img) {
+  padding: 10px;
+  background: #e9f0eb;
+}
+
+.item-art img {
+  height: 140px;
+  border-radius: 8px;
+}
+
+/* How It Works: white cards, icons, and a connecting line */
+.steps-grid {
+  position: relative;
+}
+
+.steps-grid::before {
+  content: "";
+  position: absolute;
+  top: 48px;
+  left: 16%;
+  right: 16%;
+  border-top: 2px dashed #b9cfc3;
+}
+
+.steps-grid article {
+  position: relative;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 26px 24px 20px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.steps-grid article:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px #1c394418;
+}
+
+.steps-grid .step-number {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  font-weight: 700;
+  box-shadow: 0 0 0 6px white;
+}
+
+.steps-grid article h3::before {
+  display: block;
+  font-size: 2rem;
+  margin: 10px 0 6px;
+}
+
+.steps-grid article:nth-child(1) h3::before { content: "📝"; }
+.steps-grid article:nth-child(2) h3::before { content: "🔍"; }
+.steps-grid article:nth-child(3) h3::before { content: "🤝"; }
+
+.steps-grid article h3 {
+  margin: 0 0 6px;
+}
+
+.steps-grid article p {
+  margin: 0;
+}
+
+@media (max-width: 650px) {
+  .steps-grid::before {
+    display: none;
+  }
+
+  .section {
+    padding: 34px 0;
+  }
+}
