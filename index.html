@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home | Lost & Found</title>
+  <meta name="description" content="Lost something on campus? Browse found items, report what you lost or found, and help reunite people with their belongings." />
+    <meta property="og:title" content="Lost & Found" />
+    <meta property="og:description" content="Lost something on campus? Browse found items, report what you lost or found, and help reunite people with their belongings." />
+    <meta name="theme-color" content="#263946" />
   <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
@@ -14,6 +18,14 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.3/confetti.browser.min.js" defer></script>
     <script src="script.js" defer></script>
+    <script>
+    try {
+      var t = localStorage.getItem("lf-theme");
+      if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch (e) {}
+  </script>
   </head>
 
   <body data-page="home">
@@ -33,7 +45,8 @@
           <a href="index.html" class="active">Home</a>
           <a href="about.html">About</a>
           <a href="contact.html">Contact</a>
-          <button class="btn btn-primary report-trigger">Report an Item</button>
+          <button class="theme-toggle" type="button" aria-label="Switch to dark mode">🌙</button>
+        <button class="btn btn-primary report-trigger">Report an Item</button>
         </nav>
       </div>
     </header>
@@ -92,7 +105,13 @@
             placeholder="Search by item or location..."
           />
 
-          <select id="filter-type">
+          <div class="chips" role="group" aria-label="Show">
+            <button type="button" class="chip active" data-value="all">All</button>
+            <button type="button" class="chip" data-value="lost">Lost</button>
+            <button type="button" class="chip" data-value="found">Found</button>
+          </div>
+
+          <select id="filter-type" class="visually-hidden" tabindex="-1" aria-hidden="true">
             <option value="all">All Items</option>
             <option value="lost">Lost</option>
             <option value="found">Found</option>
@@ -101,9 +120,11 @@
 
         <div class="item-grid" id="item-grid" aria-live="polite"></div>
 
-        <p class="empty-state" id="empty-state" hidden>
-          No items match your search.
-        </p>
+        <div class="empty-state" id="empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true">🔎</span>
+          <p><strong>No items match your search.</strong><br />Try another word, or let people know what you're looking for.</p>
+          <button class="btn btn-primary report-trigger">Report an Item</button>
+        </div>
       </section>
 
       <section class="steps-section">
@@ -170,9 +191,10 @@
 
         <div class="item-grid" id="found-item-grid" aria-live="polite"></div>
 
-        <p class="empty-state" id="found-empty-state" hidden>
-          No found items match your search.
-        </p>
+        <div class="empty-state" id="found-empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true">📦</span>
+          <p><strong>No found items match your search.</strong><br />Check back soon. New items are added all the time.</p>
+        </div>
       </section>
     </main>
 
@@ -193,6 +215,23 @@
     </footer>
 
   
+    <dialog id="item-dialog" class="dialog item-dialog" aria-labelledby="item-dialog-title">
+      <div class="item-dialog-art" id="item-dialog-art" aria-hidden="true"></div>
+      <div class="dialog-panel">
+        <div class="dialog-heading">
+          <h2 id="item-dialog-title"></h2>
+          <button type="button" class="close-dialog close-item-dialog" aria-label="Close item details">×</button>
+        </div>
+        <span class="status" id="item-dialog-status"></span>
+        <ul class="item-facts">
+          <li><span aria-hidden="true">📅</span> <span id="item-dialog-date"></span></li>
+          <li><span aria-hidden="true">📍</span> <span id="item-dialog-location"></span></li>
+        </ul>
+        <p id="item-dialog-description"></p>
+        <div class="item-dialog-actions" id="item-dialog-actions"></div>
+      </div>
+    </dialog>
+
     <dialog id="report-dialog" class="dialog" aria-labelledby="report-title">
       <form id="report-form" class="dialog-panel">
         <div class="dialog-heading">

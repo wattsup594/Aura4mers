@@ -264,6 +264,11 @@ function renderItems() {
   document.querySelector("#empty-state").hidden =
     filteredItems.length > 0 || (useSheet && sheetItems === null);
 
+  // Show placeholder cards while the Sheet is loading.
+  if (useSheet && sheetItems === null && !sheetError) {
+    grid.append(...skeletonCards(4));
+  }
+
   // Create a card for each item.
   filteredItems.forEach((item) => {
     grid.append(createItemCard(item));
@@ -331,33 +336,175 @@ function createItemCard(item) {
 
   revealOnScroll(card, item);
 
-  // Show more information when clicked.
-  card.addEventListener("click", () => {
-    const contact = item.email
-      ? "Contact: " + item.email
-      : "No contact information available.";
-
-    alert(
-      item.name +
-        "\n\n" +
-        item.type.toUpperCase() +
-        "\n" +
-        "Date: " +
-        formatDate(item.date) +
-        "\n" +
-        "Location: " +
-        item.location +
-        "\n\n" +
-        item.description +
-        "\n\n" +
-        contact,
-    );
-  });
+  // Show the item details window when clicked.
+  card.addEventListener("click", () => openItemDialog(item));
 
   return card;
 }
 
 // ===== Homepage extras: map filter, stats, animations =====
+
+// Gray shimmering cards shown while items load.
+function skeletonCards(count) {
+  return Array.from({ length: count }, () => {
+    const card = document.createElement("div");
+    card.className = "item-card skeleton";
+    card.setAttribute("aria-hidden", "true");
+    card.innerHTML =
+      '<span class="item-art"></span><span class="item-body">' +
+      '<span class="sk-line"></span><span class="sk-line short"></span>' +
+      '<span class="sk-line"></span></span>';
+    return card;
+  });
+}
+
+// Item details window (replaces the old alert box).
+const itemDialog = document.querySelector("#item-dialog");
+
+function openItemDialog(item) {
+  if (!itemDialog || typeof itemDialog.showModal !== "function") {
+    return;
+  }
+
+  const reunited = isReunited(item);
+  const art = itemDialog.querySelector("#item-dialog-art");
+  const photoUrl = safePhotoUrl(item.photo);
+
+  art.replaceChildren();
+  art.classList.toggle("has-photo", Boolean(photoUrl));
+
+  if (photoUrl) {
+    const photo = document.createElement("img");
+    photo.src = photoUrl;
+    photo.alt = "Photo of " + item.name;
+    art.append(photo);
+  } else {
+    art.textContent = item.icon || itemIcon(item.name);
+  }
+
+  itemDialog.querySelector("#item-dialog-title").textContent = item.name;
+
+  const status = itemDialog.querySelector("#item-dialog-status");
+  status.className = "status " + (reunited ? "reunited" : item.type);
+  status.textContent = reunited
+    ? "Reunited"
+    : item.type === "found"
+      ? "Found"
+      : "Lost";
+
+  itemDialog.querySelector("#item-dialog-date").textContent = formatDate(
+    item.date,
+  );
+  itemDialog.querySelector("#item-dialog-location").textContent =
+    item.location;
+  itemDialog.querySelector("#item-dialog-description").textContent =
+    item.description || "No description given.";
+
+  const actions = itemDialog.querySelector("#item-dialog-actions");
+  actions.replaceChildren();
+
+  if (reunited) {
+    const note = document.createElement("p");
+    note.className = "item-note";
+    note.textContent = "🎉 This item is already back with its owner.";
+    actions.append(note);
+  } else if (item.email) {
+    const contact = document.createElement("a");
+    contact.className = "btn btn-primary";
+    const subject =
+      item.type === "found"
+        ? "I think the " + item.name + " you found is mine"
+        : "I may have found your " + item.name;
+    contact.href =
+      "mailto:" +
+      encodeURIComponent(item.email).replace("%40", "@") +
+      "?subject=" +
+      encodeURIComponent(subject + " (Lost & Found)");
+    contact.textContent =
+      item.type === "found" ? "✋ This is mine" : "🙌 I found this";
+    actions.append(contact);
+
+    const hint = document.createElement("p");
+    hint.className = "item-note";
+    hint.textContent = "Opens an email to " + item.email + ".";
+    actions.append(hint);
+  } else {
+    const note = document.createElement("p");
+    note.className = "item-note";
+    note.textContent = "No contact information was left for this item.";
+    actions.append(note);
+  }
+
+  itemDialog.showModal();
+}
+
+if (itemDialog) {
+  itemDialog
+    .querySelector(".close-item-dialog")
+    .addEventListener("click", () => itemDialog.close());
+
+  itemDialog.addEventListener("click", (event) => {
+    if (event.target === itemDialog) {
+      itemDialog.close();
+    }
+  });
+}
+
+// All / Lost / Found filter buttons (they drive the hidden dropdown).
+document.querySelectorAll(".chip").forEach((chip) => {
+  chip.addEventListener("click", () => {
+    const select = document.querySelector("#filter-type");
+
+    if (!select) {
+      return;
+    }
+
+    select.value = chip.dataset.value;
+    document.querySelectorAll(".chip").forEach((other) => {
+      const on = other === chip;
+      other.classList.toggle("active", on);
+      other.setAttribute("aria-pressed", String(on));
+    });
+    renderItems();
+  });
+});
+
+// Dark mode toggle (remembers the choice in this browser).
+const themeToggle = document.querySelector(".theme-toggle");
+
+function syncThemeButton() {
+  if (!themeToggle) {
+    return;
+  }
+
+  const dark = document.documentElement.dataset.theme === "dark";
+  themeToggle.textContent = dark ? "☀️" : "🌙";
+  themeToggle.setAttribute(
+    "aria-label",
+    dark ? "Switch to light mode" : "Switch to dark mode",
+  );
+}
+
+if (themeToggle) {
+  syncThemeButton();
+  themeToggle.addEventListener("click", () => {
+    const dark = document.documentElement.dataset.theme !== "dark";
+
+    if (dark) {
+      document.documentElement.dataset.theme = "dark";
+    } else {
+      delete document.documentElement.dataset.theme;
+    }
+
+    try {
+      localStorage.setItem("lf-theme", dark ? "dark" : "light");
+    } catch (error) {
+      // Storage can be unavailable (private mode); the toggle still works.
+    }
+
+    syncThemeButton();
+  });
+}
 
 // Building chosen on the campus map (null = show every building).
 let activeBuilding = null;
@@ -839,6 +986,10 @@ function renderFoundItems() {
 
   document.querySelector("#found-empty-state").hidden =
     foundItems.length > 0 || (useSheet && sheetItems === null);
+
+  if (useSheet && sheetItems === null && !sheetError) {
+    grid.append(...skeletonCards(4));
+  }
 
   foundItems.forEach((item) => {
     grid.append(createItemCard(item));

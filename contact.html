@@ -5,12 +5,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact | Lost & Found</title>
+  <meta name="description" content="Questions about a lost or found item? Get in touch with the Lost & Found team." />
+    <meta property="og:title" content="Contact | Lost & Found" />
+    <meta property="og:description" content="Questions about a lost or found item? Get in touch with the Lost & Found team." />
+    <meta name="theme-color" content="#263946" />
   <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <meta property="og:image" content="https://wattsup594.github.io/Aura4mers/images/LostFound-Primary-Logo-White-Background.png">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.3/confetti.browser.min.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script src="script.js" defer></script>
+  <script>
+    try {
+      var t = localStorage.getItem("lf-theme");
+      if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch (e) {}
+  </script>
 </head>
 
 <body data-page="contact">
@@ -26,6 +41,7 @@
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
         <a href="contact.html" class="active">Contact</a>
+        <button class="theme-toggle" type="button" aria-label="Switch to dark mode">🌙</button>
         <button class="btn btn-primary report-trigger">
           Report an Item
         </button>
@@ -45,7 +61,7 @@
           </p>
         </div>
 
-        <div class="mail-illustration">✉</div>
+        <div class="mail-illustration" aria-hidden="true"><span class="float-item mail-tile">📬</span></div>
       </div>
     </section>
 
@@ -98,7 +114,7 @@
 
       <aside class="contact-sidebar">
         <div class="info-line">
-          <span class="info-icon">●</span>
+          <span class="info-icon">📍</span>
           <div>
             <h3>Our Location</h3>
             <p>Rexburg, ID 83440<br>BYU-Idaho area</p>
@@ -106,7 +122,7 @@
         </div>
 
         <div class="info-line">
-          <span class="info-icon">✉</span>
+          <span class="info-icon">✉️</span>
           <div>
             <h3>Email Us</h3>
             <p><a href="mailto:lostandfound@example.com">lostandfound@example.com</a></p>
@@ -114,7 +130,7 @@
         </div>
 
         <div class="info-line">
-          <span class="info-icon">◷</span>
+          <span class="info-icon">⏱️</span>
           <div>
             <h3>Response Time</h3>
             <p>Messages are not sent in this demo.</p>

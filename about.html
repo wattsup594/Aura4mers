@@ -5,12 +5,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About | Lost & Found</title>
+  <meta name="description" content="Meet the team behind Lost & Found and learn how we help reunite our community with lost belongings." />
+    <meta property="og:title" content="About | Lost & Found" />
+    <meta property="og:description" content="Meet the team behind Lost & Found and learn how we help reunite our community with lost belongings." />
+    <meta name="theme-color" content="#263946" />
   <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <meta property="og:image" content="https://wattsup594.github.io/Aura4mers/images/LostFound-Primary-Logo-White-Background.png">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.3/confetti.browser.min.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script src="script.js" defer></script>
+  <script>
+    try {
+      var t = localStorage.getItem("lf-theme");
+      if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    } catch (e) {}
+  </script>
 </head>
 <body data-page="about">
   <header class="site-header">
@@ -25,6 +40,7 @@
         <a href="index.html">Home</a>
         <a href="about.html" class="active">About</a>
         <a href="contact.html">Contact</a>
+        <button class="theme-toggle" type="button" aria-label="Switch to dark mode">🌙</button>
         <button class="btn btn-primary report-trigger">
           Report an Item
         </button>
@@ -55,9 +71,13 @@
           </p>
         </div>
 
-        <div class="visual-tile picture-large">
-          <span class="mountains">◢ ◣</span>
-          <span class="sun"></span>
+        <div class="hero-illustration" aria-hidden="true">
+          <div class="hero-glow"></div>
+          <span class="float-item fi-1">🧭</span>
+          <span class="float-item fi-2">🔑</span>
+          <span class="float-item fi-3">📓</span>
+          <span class="float-item fi-4">🎒</span>
+          <span class="float-item fi-center">🤝</span>
         </div>
       </div>
     </section>
@@ -65,7 +85,7 @@
     <section class="values-section">
       <div class="container values-grid">
         <article>
-          <div class="value-icon">♟</div>
+          <div class="value-icon">👥</div>
           <h2>Community Driven</h2>
           <p>
             We're built by and for our community.
@@ -75,7 +95,7 @@
         </article>
 
         <article>
-          <div class="value-icon">♢</div>
+          <div class="value-icon">🛡️</div>
           <h2>Safe & Trustworthy</h2>
           <p>
             We take privacy and security seriously.
@@ -85,7 +105,7 @@
         </article>
 
         <article>
-          <div class="value-icon">♡</div>
+          <div class="value-icon">💚</div>
           <h2>A Positive Impact</h2>
           <p>
             Reuniting people with their belongings
@@ -106,9 +126,8 @@
         </p>
       </div>
 
-      <div class="visual-tile picture-landscape">
-        <span class="mountains">◢ ◣</span>
-        <span class="sun"></span>
+      <div class="mission-card" aria-hidden="true">
+        <span>📝</span><span class="mission-arrow">→</span><span>🔍</span><span class="mission-arrow">→</span><span>🤝</span>
       </div>
     </section>
 
@@ -169,7 +188,7 @@
 
     <section class="banner">
       <div class="container banner-inner">
-        <span class="banner-icon">♧</span>
+        <span class="banner-icon">💚</span>
         <div>
           <h2>Together We Make a Difference</h2>
           <p>
