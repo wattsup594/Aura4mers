@@ -65,6 +65,29 @@ const defaultItems = [
   },
 ];
 
+// Small inline SVG icons (Lucide-style outlines) used by the script.
+const ICON_PATHS = {
+  "pin": "<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\"/><circle cx=\"12\" cy=\"10\" r=\"3\"/>",
+  "moon": "<path d=\"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z\"/>",
+  "sun": "<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2\"/><path d=\"M12 20v2\"/><path d=\"m4.93 4.93 1.41 1.41\"/><path d=\"m17.66 17.66 1.41 1.41\"/><path d=\"M2 12h2\"/><path d=\"M20 12h2\"/><path d=\"m6.34 17.66-1.41 1.41\"/><path d=\"m19.07 4.93-1.41 1.41\"/>"
+};
+
+function svgIcon(name, className) {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.75");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("class", className || "icon");
+  // Paths are fixed strings defined above, never user data.
+  svg.innerHTML = ICON_PATHS[name] || "";
+  return svg;
+}
+
 // Get reports previously saved in this browser.
 function savedReports() {
   try {
@@ -321,7 +344,7 @@ function createItemCard(item) {
 
   const location = document.createElement("span");
   location.className = "meta";
-  location.textContent = "📍 " + item.location;
+  location.append(svgIcon("pin", "icon meta-icon"), " " + item.location);
 
   body.append(title, status, date, location);
   card.append(art, body);
@@ -478,7 +501,7 @@ function syncThemeButton() {
   }
 
   const dark = document.documentElement.dataset.theme === "dark";
-  themeToggle.textContent = dark ? "☀️" : "🌙";
+  themeToggle.replaceChildren(svgIcon(dark ? "sun" : "moon"));
   themeToggle.setAttribute(
     "aria-label",
     dark ? "Switch to light mode" : "Switch to dark mode",
@@ -560,7 +583,7 @@ function renderCampusMap() {
 
       const pin = document.createElement("span");
       pin.className = "map-pin";
-      pin.textContent = "📍";
+      pin.append(svgIcon("pin"));
       pin.setAttribute("aria-hidden", "true");
 
       const label = document.createElement("span");
@@ -685,7 +708,7 @@ function celebrate() {
   });
 }
 
-// Typewriter word in the hero subtitle.
+// Rotating keyword in the hero subtitle (slides up and fades).
 const typewriterWord = document.querySelector("#typewriter-word");
 
 if (typewriterWord && !reduceMotion) {
@@ -694,19 +717,48 @@ if (typewriterWord && !reduceMotion) {
 
   setInterval(() => {
     index = (index + 1) % words.length;
-    const word = words[index];
-    let letters = 0;
+    typewriterWord.classList.add("word-out");
 
-    const typing = setInterval(() => {
-      letters += 1;
-      typewriterWord.textContent = word.slice(0, letters);
+    setTimeout(() => {
+      typewriterWord.textContent = words[index];
+      typewriterWord.classList.remove("word-out");
+      typewriterWord.classList.add("word-in");
 
-      if (letters >= word.length) {
-        clearInterval(typing);
-      }
-    }, 70);
-  }, 2400);
+      // Next frame: let it slide into place.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => typewriterWord.classList.remove("word-in")),
+      );
+    }, 280);
+  }, 2600);
 }
+
+// "Reset filters" buttons in the empty states.
+document.querySelectorAll(".reset-filters").forEach((button) => {
+  button.addEventListener("click", () => {
+    if (button.dataset.target === "found") {
+      const search = document.querySelector("#search-found-items");
+      const sort = document.querySelector("#sort-found-items");
+
+      if (search) search.value = "";
+      if (sort) sort.value = "newest";
+      renderFoundItems();
+      return;
+    }
+
+    const search = document.querySelector("#search-items");
+    const select = document.querySelector("#filter-type");
+
+    if (search) search.value = "";
+    if (select) select.value = "all";
+    activeBuilding = null;
+    document.querySelectorAll(".chip").forEach((chip) => {
+      const on = chip.dataset.value === "all";
+      chip.classList.toggle("active", on);
+      chip.setAttribute("aria-pressed", String(on));
+    });
+    renderItems();
+  });
+});
 
 // Mobile navigation menu.
 const menuButton = document.querySelector(".menu-toggle");
