@@ -1590,3 +1590,16 @@ textarea:focus {
     font-size: 2.2rem;
   }
 }
+
+/* Keep card content pinned to the top when a neighbour card is taller */
+.item-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.item-card .item-body {
+  flex: 1;
+  align-content: start;
+}
