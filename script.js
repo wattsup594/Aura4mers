@@ -127,8 +127,45 @@ function itemIcon(name) {
     return "🎒";
   }
 
+  // Check "headphone" before "phone" so headphones get the right icon.
+  if (lower.includes("headphone") || lower.includes("earbud")) {
+    return "🎧";
+  }
+
   if (lower.includes("phone")) {
     return "📱";
+  }
+
+  if (lower.includes("glasses") || lower.includes("sunglass")) {
+    return "👓";
+  }
+
+  if (lower.includes("umbrella")) {
+    return "☂️";
+  }
+
+  if (lower.includes("notebook") || lower.includes("book")) {
+    return "📓";
+  }
+
+  if (lower.includes("scarf")) {
+    return "🧣";
+  }
+
+  if (lower.includes("cup") || lower.includes("mug")) {
+    return "🥤";
+  }
+
+  if (lower.includes("purse")) {
+    return "👛";
+  }
+
+  if (lower.includes("laptop")) {
+    return "💻";
+  }
+
+  if (lower.includes("jacket") || lower.includes("coat")) {
+    return "🧥";
   }
 
   if (lower.includes("key")) {
@@ -210,17 +247,19 @@ function renderItems() {
 
   const filteredItems = allItems().filter((item) => {
     const matchesType = type === "all" || item.type === type;
+    const matchesBuilding =
+      !activeBuilding || buildingName(item.location) === activeBuilding;
 
-    return matchesType && searchText(item).includes(query);
+    return matchesType && matchesBuilding && searchText(item).includes(query);
   });
 
   // Clear previous cards.
   grid.replaceChildren();
 
-  document.querySelector("#item-count").textContent = countLabel(
-    filteredItems.length,
-    "items",
-  );
+  document.querySelector("#item-count").textContent =
+    useSheet && sheetItems === null
+      ? countLabel(0, "items")
+      : String(filteredItems.length);
 
   document.querySelector("#empty-state").hidden =
     filteredItems.length > 0 || (useSheet && sheetItems === null);
@@ -229,6 +268,9 @@ function renderItems() {
   filteredItems.forEach((item) => {
     grid.append(createItemCard(item));
   });
+
+  renderCampusMap();
+  updateStats();
 }
 
 // Build one item card (used by both item lists).
@@ -259,9 +301,14 @@ function createItemCard(item) {
   const title = document.createElement("strong");
   title.textContent = item.name;
 
+  const reunited = isReunited(item);
   const status = document.createElement("span");
-  status.className = "status " + item.type;
-  status.textContent = item.type === "found" ? "Found" : "Lost";
+  status.className = "status " + (reunited ? "reunited" : item.type);
+  status.textContent = reunited
+    ? "Reunited"
+    : item.type === "found"
+      ? "Found"
+      : "Lost";
 
   const date = document.createElement("span");
   date.className = "meta";
@@ -273,6 +320,16 @@ function createItemCard(item) {
 
   body.append(title, status, date, location);
   card.append(art, body);
+
+  if (reunited) {
+    const stamp = document.createElement("span");
+    stamp.className = "reunited-stamp";
+    stamp.textContent = "REUNITED";
+    stamp.setAttribute("aria-hidden", "true");
+    card.append(stamp);
+  }
+
+  revealOnScroll(card, item);
 
   // Show more information when clicked.
   card.addEventListener("click", () => {
@@ -298,6 +355,210 @@ function createItemCard(item) {
   });
 
   return card;
+}
+
+// ===== Homepage extras: map filter, stats, animations =====
+
+// Building chosen on the campus map (null = show every building).
+let activeBuilding = null;
+
+// An item counts as reunited when its Status in the Sheet says so.
+function isReunited(item) {
+  return String(item.status || "").trim().toLowerCase() === "reunited";
+}
+
+// "Smith Building, room 280" -> "Smith Building", "McKay Library, 2nd floor" -> "McKay Library".
+function buildingName(location) {
+  const text = String(location || "").split(",")[0].trim();
+  const match = text.match(
+    /^(.*?\b(building|center|centre|library|hall|gym|stadium|chapel|lot))\b/i,
+  );
+  const name = (match ? match[1] : text).trim();
+
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+// Draw one map "building" per location, with a pin and item count.
+function renderCampusMap() {
+  const map = document.querySelector("#campus-map");
+
+  if (!map) {
+    return;
+  }
+
+  const counts = new Map();
+
+  allItems().forEach((item) => {
+    const name = buildingName(item.location);
+
+    if (name) {
+      counts.set(name, (counts.get(name) || 0) + 1);
+    }
+  });
+
+  if (activeBuilding && !counts.has(activeBuilding)) {
+    activeBuilding = null;
+  }
+
+  map.replaceChildren();
+
+  [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([name, count]) => {
+      const building = document.createElement("button");
+      building.type = "button";
+      building.className =
+        "building" + (name === activeBuilding ? " active" : "");
+      building.setAttribute("aria-pressed", String(name === activeBuilding));
+
+      const pin = document.createElement("span");
+      pin.className = "map-pin";
+      pin.textContent = "📍";
+      pin.setAttribute("aria-hidden", "true");
+
+      const label = document.createElement("span");
+      label.textContent = name;
+
+      const total = document.createElement("span");
+      total.className = "pin-count";
+      total.textContent = count + (count === 1 ? " item" : " items");
+
+      building.append(pin, label, total);
+      building.addEventListener("click", () => {
+        activeBuilding = activeBuilding === name ? null : name;
+        renderItems();
+      });
+
+      map.append(building);
+    });
+
+  const hint = document.querySelector("#map-hint");
+
+  if (hint) {
+    hint.textContent = activeBuilding
+      ? "Showing " + activeBuilding + " · tap again to clear"
+      : "Tap a building to filter";
+  }
+}
+
+// Count numbers up from their current value.
+function countTo(element, target) {
+  if (!element) {
+    return;
+  }
+
+  const start = Number(element.textContent) || 0;
+
+  if (start === target) {
+    return;
+  }
+
+  const steps = 20;
+  let step = 0;
+
+  clearInterval(element._timer);
+  element._timer = setInterval(() => {
+    step += 1;
+    element.textContent = Math.round(start + ((target - start) * step) / steps);
+
+    if (step >= steps) {
+      clearInterval(element._timer);
+    }
+  }, 30);
+}
+
+function updateStats() {
+  if (useSheet && sheetItems === null) {
+    return;
+  }
+
+  const items = allItems();
+
+  countTo(document.querySelector("#stat-total"), items.length);
+  countTo(
+    document.querySelector("#stat-found"),
+    items.filter((item) => item.type === "found" && !isReunited(item)).length,
+  );
+  countTo(
+    document.querySelector("#stat-reunited"),
+    items.filter(isReunited).length,
+  );
+}
+
+// Fade cards in as they scroll into view (only the first time each is shown,
+// so the 30-second refresh doesn't replay the animation).
+const shownCards = new Set();
+const reduceMotion = window.matchMedia(
+  "(prefers-reduced-motion: reduce)",
+).matches;
+const cardObserver =
+  "IntersectionObserver" in window
+    ? new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const card = entry.target;
+              const delay = Number(card.dataset.delay || 0);
+
+              setTimeout(() => card.classList.add("in"), delay);
+              cardObserver.unobserve(card);
+            }
+          });
+        },
+        { threshold: 0.15 },
+      )
+    : null;
+
+let revealBatch = 0;
+
+function revealOnScroll(card, item) {
+  const key = item.id || item.name;
+
+  if (!cardObserver || reduceMotion || shownCards.has(key)) {
+    return;
+  }
+
+  shownCards.add(key);
+  card.classList.add("reveal");
+  card.dataset.delay = String((revealBatch++ % 4) * 90);
+  cardObserver.observe(card);
+}
+
+// Confetti burst (used after a report is submitted).
+function celebrate() {
+  if (typeof window.confetti !== "function" || reduceMotion) {
+    return;
+  }
+
+  window.confetti({
+    particleCount: 120,
+    spread: 80,
+    origin: { y: 0.6 },
+    colors: ["#4e806e", "#9fc4b4", "#f6c453", "#e57373", "#263946"],
+  });
+}
+
+// Typewriter word in the hero subtitle.
+const typewriterWord = document.querySelector("#typewriter-word");
+
+if (typewriterWord && !reduceMotion) {
+  const words = ["keys", "phone", "backpack", "umbrella", "headphones", "wallet"];
+  let index = 0;
+
+  setInterval(() => {
+    index = (index + 1) % words.length;
+    const word = words[index];
+    let letters = 0;
+
+    const typing = setInterval(() => {
+      letters += 1;
+      typewriterWord.textContent = word.slice(0, letters);
+
+      if (letters >= word.length) {
+        clearInterval(typing);
+      }
+    }, 70);
+  }, 2400);
 }
 
 // Mobile navigation menu.
@@ -501,6 +762,7 @@ if (reportForm) {
 
       reportForm.reset();
       dialog.close();
+      celebrate();
 
       if (document.body.dataset.page === "home") {
         document.querySelector("#search-items").value = "";

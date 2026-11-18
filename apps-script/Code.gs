@@ -33,6 +33,7 @@ const HEADERS = [
   "Description",
   "Contact Email",
   "Photo URL",
+  "Status", // Optional: type "reunited" here when an item is returned.
 ];
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -163,6 +164,7 @@ function doGet() {
       description: row[6],
       email: row[7],
       photo: row[8],
+      status: row[9] || "", // Empty unless the team adds a Status column.
     }))
     .reverse();
 

@@ -63,3 +63,14 @@ Edit (pencil) → Version: New version → Deploy**. This keeps the same URL, so
 
 Note: the contact email is shown on the website when someone clicks an item
 (the same as before), so remind testers to use fake emails.
+
+## Marking items as reunited (optional)
+
+When an item gets back to its owner, open the Sheet and type `reunited` in the
+**Status** column (column J) of that item's row. If your Sheet doesn't have
+that column yet, add the header `Status` in cell J1. Nothing else in the Sheet
+needs to change, and existing rows are kept as they are.
+
+The website then shows a "REUNITED" stamp on the card and counts it in the
+Reunited stat. After updating `Code.gs`, redeploy the Web App
+(**Deploy → Manage deployments → Edit → New version**) and keep the same URL.

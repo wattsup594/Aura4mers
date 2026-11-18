@@ -8,7 +8,11 @@
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <meta property="og:image" content="https://wattsup594.github.io/Aura4mers/images/LostFound-Primary-Logo-White-Background.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.3/confetti.browser.min.js" defer></script>
     <script src="script.js" defer></script>
   </head>
 
@@ -39,8 +43,9 @@
         <div class="container hero-layout">
           <div class="hero-copy">
             <h1>Lost something?<br />Found something?</h1>
-            <p class="hero-subtitle">We're here to help.</p>
-
+            <p class="hero-subtitle">
+              We're here to help you find your <span class="typewriter"><span id="typewriter-word">keys</span></span>.
+            </p>
             <p>
               Lost & Found connects people with their missing items. Browse
               recent reports, or submit your own lost or found item.
@@ -56,18 +61,29 @@
 
           <div class="hero-illustration" aria-hidden="true">
             <div class="hero-glow"></div>
-            <div class="pin">●</div>
-            <div class="cube"></div>
-            <div class="cube-shadow"></div>
+            <span class="float-item fi-1">👓</span>
+            <span class="float-item fi-2">🔑</span>
+            <span class="float-item fi-3">🎧</span>
+            <span class="float-item fi-4">🎒</span>
+            <span class="float-item fi-5">☂️</span>
+            <span class="float-item fi-center">🔍</span>
           </div>
         </div>
       </section>
 
+      <section class="container stats-row" aria-label="Lost and found at a glance">
+        <div class="stat"><span class="stat-label">Items reported</span><strong class="stat-value" id="stat-total">0</strong></div>
+        <div class="stat"><span class="stat-label">Found and waiting</span><strong class="stat-value" id="stat-found">0</strong></div>
+        <div class="stat"><span class="stat-label">Reunited</span><strong class="stat-value stat-good" id="stat-reunited">0</strong></div>
+      </section>
+
       <section class="section container" id="recent-items">
         <div class="section-heading">
-          <h2>Recent Items</h2>
-          <span id="item-count"></span>
+          <h2>Recent Items <span id="item-count" class="count-badge"></span></h2>
+          <span class="map-hint" id="map-hint">Tap a building to filter</span>
         </div>
+
+        <div class="campus-map" id="campus-map" aria-label="Filter items by building"></div>
 
         <div class="filters">
           <input
