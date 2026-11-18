@@ -2382,3 +2382,16 @@ h2 {
 [data-theme="dark"] .site-header {
   background: rgb(38, 57, 70);
 }
+
+/* Header logo now has a transparent background: keep true glass in both themes */
+.site-header .brand-logo {
+  mix-blend-mode: normal;
+}
+
+.site-header {
+  background: rgba(38, 57, 70, 0.84);
+}
+
+[data-theme="dark"] .site-header {
+  background: rgba(19, 31, 40, 0.8);
+}
