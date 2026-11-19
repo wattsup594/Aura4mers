@@ -796,38 +796,60 @@ async function copyText(text) {
 }
 
 // Used only until the updated Sheet script is deployed (it still sends emails).
+// The button copies the reporter's email so the visitor can paste it anywhere;
+// it does not leave the page.
 function buildEmailFallback(item) {
   const isClaim = item.type === "found";
-  const subject = isClaim
-    ? "I think the " + item.name + " you found is mine"
-    : "I may have found your " + item.name;
-  const bodyText = isClaim
-    ? "Hi! I think the " + item.name + " you found at " + item.location + " is mine.\n\nSomething that proves it's mine: \n\nWhen and where could I pick it up?"
-    : "Hi! I think I found your " + item.name + ".\n\nWhere I found it: \n\nLet me know a good time and place to give it back.";
+  const label = isClaim ? "✋ This is mine" : "🙌 I found this";
 
-  const contact = document.createElement("a");
-  contact.className = "btn btn-primary";
-  contact.href =
-    "mailto:" + encodeURIComponent(item.email).replace("%40", "@") +
-    "?subject=" + encodeURIComponent(subject + " (Lost & Found)") +
-    "&body=" + encodeURIComponent(bodyText);
-  contact.textContent = isClaim ? "✋ This is mine" : "🙌 I found this";
+  const contact = document.createElement("button");
+  contact.type = "button";
+  contact.className = "btn btn-primary contact-copy-main";
+  contact.textContent = label;
 
-  const hint = document.createElement("p");
-  hint.className = "item-note";
-  hint.textContent = "Opens your email app and copies " + item.email + ".";
+  const box = document.createElement("div");
+  box.className = "copy-box";
+  box.hidden = true;
 
-  // One tap: copy the address (in case no email app opens) and open the email.
-  contact.addEventListener("click", () => {
-    copyText(item.email).then((copied) => {
-      hint.textContent = copied
-        ? "✓ Email copied: " + item.email + ". Opening your email app…"
-        : "Email: " + item.email;
-      hint.classList.add("copied");
-    });
-  });
+  const done = document.createElement("strong");
+  done.className = "copy-box-title";
+  done.textContent = "✓ Email copied";
 
-  return [contact, hint];
+  const address = document.createElement("div");
+  address.className = "copy-box-address";
+  const addressText = document.createElement("span");
+  addressText.textContent = item.email;
+  const again = document.createElement("button");
+  again.type = "button";
+  again.className = "copy-again";
+  again.textContent = "Copy";
+  address.append(addressText, again);
+
+  const tip = document.createElement("p");
+  tip.className = "copy-box-tip";
+  tip.textContent = isClaim
+    ? "Paste it into Gmail or any email app and tell the finder something only the owner would know."
+    : "Paste it into Gmail or any email app and tell the owner where you found it.";
+
+  box.append(done, address, tip);
+
+  const copyNow = async () => {
+    const ok = await copyText(item.email);
+    done.textContent = ok ? "✓ Email copied" : "Copy this email:";
+    box.hidden = false;
+    contact.textContent = ok ? "✓ Copied" : label;
+    again.textContent = ok ? "Copied" : "Copy";
+    window.clearTimeout(copyNow.timer);
+    copyNow.timer = window.setTimeout(() => {
+      contact.textContent = label;
+      again.textContent = "Copy";
+    }, 2000);
+  };
+
+  contact.addEventListener("click", copyNow);
+  again.addEventListener("click", copyNow);
+
+  return [contact, box];
 }
 
 if (itemDialog) {
