@@ -72,22 +72,24 @@
             </div>
           </div>
 
-          <div class="hero-illustration" aria-hidden="true">
-            <div class="hero-glow"></div>
-            <span class="float-item fi-1"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="15" r="4"/><circle cx="18" cy="15" r="4"/><path d="M14 15a2 2 0 0 0-2-1 2 2 0 0 0-2 1"/><path d="M2.5 13 5 7c.7-1.3 1.4-2 3-2"/><path d="M21.5 13 19 7c-.7-1.3-1.5-2-3-2"/></svg></span>
-            <span class="float-item fi-2"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg></span>
-            <span class="float-item fi-3"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg></span>
-            <span class="float-item fi-4"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 10h8"/><path d="M8 18h8"/><path d="M8 22v-6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg></span>
-            <span class="float-item fi-5"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12a10.06 10.06 1 0 0-20 0Z"/><path d="M12 12v8a2 2 0 0 0 4 0"/><path d="M12 2v1"/></svg></span>
-            <span class="float-item fi-center"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+          <div class="hero-illustration lens-scene" id="lens-scene" aria-hidden="true">
+            <div class="lens-glow"></div>
+            <div class="lens-items" id="lens-items"></div>
+            <div class="lens" id="lens"><span class="lens-handle"></span></div>
           </div>
         </div>
       </section>
+
+
 
       <section class="container stats-row" aria-label="Lost and found at a glance">
         <div class="stat"><span class="stat-label">Items reported</span><strong class="stat-value" id="stat-total">0</strong></div>
         <div class="stat"><span class="stat-label">Found and waiting</span><strong class="stat-value" id="stat-found">0</strong></div>
         <div class="stat"><span class="stat-label">Reunited</span><strong class="stat-value stat-good" id="stat-reunited">0</strong></div>
+      </section>
+
+      <section class="ticker" aria-label="Latest reports">
+        <div class="ticker-track" id="ticker-track"></div>
       </section>
 
       <section class="section container" id="recent-items">
@@ -156,6 +158,36 @@
         </div>
       </section>
 
+
+      <section class="section container compare-section">
+        <span class="eyebrow">See the difference</span>
+        <h2>Losing something shouldn't mean losing a whole day.</h2>
+        <div class="compare-grid">
+          <article class="compare-card before">
+            <span class="compare-tag">Without Lost &amp; Found</span>
+            <h3>The usual scramble</h3>
+            <ul>
+              <li>Retracing your steps across campus</li>
+              <li>Asking at every front desk</li>
+              <li>Posting in five different group chats</li>
+              <li>Hoping someone remembers seeing it</li>
+              <li>Found items sit in a drawer for weeks</li>
+            </ul>
+          </article>
+          <article class="compare-card after">
+            <span class="compare-tag">With Lost &amp; Found</span>
+            <h3>One place to check</h3>
+            <ul>
+              <li>Every report in one searchable list</li>
+              <li>Filter by the building you were in</li>
+              <li>See a photo before you go anywhere</li>
+              <li>Email the finder in one click</li>
+              <li>Items get back to owners faster</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
       <section class="banner">
         <div class="container banner-inner">
           <span class="banner-icon">♡</span>
@@ -198,6 +230,36 @@
           <span class="empty-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"/><path d="m7.5 4.27 9 5.15"/></svg></span>
           <p><strong>No found items match your search.</strong><br />Check back soon. New items are added all the time.</p>
           <button type="button" class="btn btn-outline reset-filters" data-target="found">Reset filters</button>
+        </div>
+      </section>
+
+      <section class="section container home-faq">
+        <div class="faq-intro">
+          <span class="eyebrow">FAQ</span>
+          <h2>Questions?<br />We're glad you asked.</h2>
+          <div class="faq-cta">
+            <strong>Still stuck?</strong>
+            <p>Send us a message and the team will get back to you.</p>
+            <a class="btn btn-primary" href="contact.html">Contact us</a>
+          </div>
+        </div>
+        <div class="faq-numbered">
+          <details open>
+            <summary><span class="faq-num">01</span>How do I report something I lost or found?</summary>
+            <p>Click <strong>Report an Item</strong>, choose lost or found, and fill in where and when. Adding a photo makes it much easier to match.</p>
+          </details>
+          <details>
+            <summary><span class="faq-num">02</span>How do I get in touch with the finder?</summary>
+            <p>Open the item's card and press <strong>This is mine</strong>. It opens an email to the person who reported it.</p>
+          </details>
+          <details>
+            <summary><span class="faq-num">03</span>Is my email shown to everyone?</summary>
+            <p>Yes. The contact email on a report is visible on its card so people can reach you, so use a school email you're comfortable sharing.</p>
+          </details>
+          <details>
+            <summary><span class="faq-num">04</span>What happens once an item is returned?</summary>
+            <p>Let us know and we'll mark it <strong>Reunited</strong>. It stays on the list with a stamp so everyone can see it was returned.</p>
+          </details>
         </div>
       </section>
     </main>

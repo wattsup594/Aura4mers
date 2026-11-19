@@ -101,11 +101,14 @@ function savedReports() {
 
 // All items to display, newest reports first.
 function allItems() {
-  if (useSheet) {
-    return sheetItems || [];
-  }
+  const items = useSheet
+    ? sheetItems || []
+    : [...savedReports().reverse(), ...defaultItems];
 
-  return [...savedReports().reverse(), ...defaultItems];
+  // Newest date first, whatever order the Sheet rows are in.
+  return [...items].sort((a, b) =>
+    String(b.date || "").localeCompare(String(a.date || "")),
+  );
 }
 
 // Load the latest reports from the shared Sheet.
@@ -299,6 +302,131 @@ function renderItems() {
 
   renderCampusMap();
   updateStats();
+  renderTicker();
+  renderLens();
+}
+
+// Hero: a magnifying glass sweeps over scattered items; whatever is under
+// the lens comes into focus with a "Found!" tag. Follows the mouse on hover.
+const LENS_SPOTS = [
+  [14, 24], [46, 18], [80, 24], [26, 52], [62, 46], [88, 58], [12, 82], [44, 80], [74, 86],
+];
+
+function renderLens() {
+  const scene = document.querySelector("#lens-scene");
+  const holder = document.querySelector("#lens-items");
+
+  if (!scene || !holder || scene.dataset.ready) {
+    return;
+  }
+
+  const latest = allItems().slice(0, LENS_SPOTS.length);
+  if (latest.length === 0) {
+    return;
+  }
+  scene.dataset.ready = "1";
+
+  const nodes = latest.map((item, i) => {
+    const el = document.createElement("span");
+    el.className = "lens-item";
+    el.style.left = LENS_SPOTS[i][0] + "%";
+    el.style.top = LENS_SPOTS[i][1] + "%";
+    el.style.setProperty("--float", (i * 0.4).toFixed(1) + "s");
+
+    const art = document.createElement("span");
+    art.className = "lens-emoji";
+    art.textContent = item.icon || itemIcon(item.name);
+
+    const tag = document.createElement("span");
+    tag.className = "lens-tag " + item.type;
+    tag.textContent = (item.type === "found" ? "Found! " : "Lost: ") + item.name;
+
+    el.append(art, tag);
+    holder.append(el);
+    return el;
+  });
+
+  const lens = document.querySelector("#lens");
+  let target = null;
+  let pos = { x: 0.5, y: 0.5 };
+  let t = 0;
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  scene.addEventListener("pointermove", (e) => {
+    const r = scene.getBoundingClientRect();
+    target = { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+  });
+  scene.addEventListener("pointerleave", () => { target = null; });
+
+  function frame() {
+    t += 0.006;
+    // Wandering figure-eight path when the mouse isn't steering.
+    const auto = { x: 0.5 + Math.sin(t * 1.3) * 0.36, y: 0.52 + Math.sin(t * 2.1) * 0.3 };
+    const goal = target || auto;
+    pos.x += (goal.x - pos.x) * (target ? 0.18 : 0.06);
+    pos.y += (goal.y - pos.y) * (target ? 0.18 : 0.06);
+
+    const r = scene.getBoundingClientRect();
+    const lx = pos.x * r.width;
+    const ly = pos.y * r.height;
+    lens.style.transform = `translate(${lx}px, ${ly}px)`;
+
+    nodes.forEach((n) => {
+      const nx = (parseFloat(n.style.left) / 100) * r.width;
+      const ny = (parseFloat(n.style.top) / 100) * r.height;
+      n.classList.toggle("spotted", Math.hypot(nx - lx, ny - ly) < 50);
+    });
+
+    if (!still) requestAnimationFrame(frame);
+  }
+
+  frame();
+}
+
+// Scrolling strip of the latest reports under the hero.
+function renderTicker() {
+  const track = document.querySelector("#ticker-track");
+
+  if (!track) {
+    return;
+  }
+
+  const latest = allItems().slice(0, 10);
+  track.replaceChildren();
+
+  if (latest.length === 0) {
+    return;
+  }
+
+  const makeRun = (hidden) => {
+    const run = document.createElement("div");
+    run.className = "ticker-run";
+
+    if (hidden) {
+      run.setAttribute("aria-hidden", "true");
+    }
+
+    latest.forEach((item) => {
+      const chip = document.createElement("span");
+      chip.className = "ticker-item";
+
+      const dot = document.createElement("span");
+      dot.className = "ticker-dot " + (isReunited(item) ? "reunited" : item.type);
+
+      const label = document.createElement("span");
+      label.textContent =
+        (item.icon || itemIcon(item.name)) + " " + item.name + " · " +
+        buildingName(item.location);
+
+      chip.append(dot, label);
+      run.append(chip);
+    });
+
+    return run;
+  };
+
+  // Two copies so the loop is seamless.
+  track.append(makeRun(false), makeRun(true));
 }
 
 // Build one item card (used by both item lists).
@@ -543,12 +671,222 @@ function buildingName(location) {
   const match = text.match(
     /^(.*?\b(building|center|centre|library|hall|gym|stadium|chapel|lot))\b/i,
   );
-  const name = (match ? match[1] : text).trim();
+  const campus = CAMPUS.find((spot) => spot.match.test(location));
+
+  if (campus) {
+    return campus.name;
+  }
+
+  let name = (match ? match[1] : text).trim();
+
+  // "Library" and "McKay Library" are the same building.
+  if (/^(the )?library$/i.test(name)) {
+    name = "McKay Library";
+  }
 
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-// Draw one map "building" per location, with a pin and item count.
+// ===== Illustrated campus map (idea from paulfey.me/about) =====
+// Building positions come from Google Maps coordinates for each BYU-Idaho
+// building, projected onto the drawing (north is up). Artwork is illustrative.
+const MAP_BOUNDS = { west: -111.7868, east: -111.7786, north: 43.8222, south: 43.8139 };
+const MAP_W = 1000;
+const MAP_H = 880;
+const MAP_PAD = 40;
+
+function mapX(lng) {
+  return MAP_PAD + ((lng - MAP_BOUNDS.west) / (MAP_BOUNDS.east - MAP_BOUNDS.west)) * (MAP_W - MAP_PAD * 2);
+}
+
+function mapY(lat) {
+  return MAP_PAD + ((MAP_BOUNDS.north - lat) / (MAP_BOUNDS.north - MAP_BOUNDS.south)) * (MAP_H - MAP_PAD * 2);
+}
+
+const CAMPUS = [
+  { code: "SNO", name: "Snow Performing Arts Center", lat: 43.82150, lng: -111.78322, w: 104, h: 40, color: "#c9a27f", match: /\bsnow\b|\bsno\b|performing arts/i },
+  { code: "SPO", name: "Spori Building", lat: 43.82089, lng: -111.78240, w: 78, h: 38, color: "#c98b6b", match: /spori|\bspo\b/i },
+  { code: "ROM", name: "Romney Building", lat: 43.82020, lng: -111.78380, w: 66, h: 34, color: "#b9a68c", match: /romney|\brom\b/i },
+  { code: "CLK", name: "Clarke Building", lat: 43.82034, lng: -111.78130, w: 66, h: 36, color: "#a7b6a0", match: /clarke|\bclk\b/i },
+  { code: "STA", name: "BYU-Idaho Stadium", lat: 43.82095, lng: -111.78602, stadium: true, match: /stadium|\bsta\b/i },
+  { code: "HFC", name: "Hart Building", lat: 43.81960, lng: -111.78597, w: 110, h: 44, color: "#9fb0bf", match: /\bhart\b|fitness|\bgym\b/i },
+  { code: "MCK", name: "McKay Library", lat: 43.81950, lng: -111.78282, w: 84, h: 42, color: "#c7b37f", match: /mckay|library|\bmck\b/i },
+  { code: "SMI", name: "Smith Building", lat: 43.81914, lng: -111.78146, w: 72, h: 46, color: "#a9b8c6", match: /smith|\bsmi\b/i },
+  { code: "BCTR", name: "BYU-Idaho Center", lat: 43.81849, lng: -111.78574, w: 136, h: 70, color: "#b4bcc4", match: /byu-?i(daho)? center|\bbctr\b|i-center/i },
+  { code: "MC", name: "Manwaring Center", lat: 43.81843, lng: -111.78260, w: 112, h: 58, color: "#8fb3a5", match: /manwaring|crossroads|\bmc\b/i },
+  { code: "CHP", name: "Chapman Hall", lat: 43.81798, lng: -111.78059, w: 70, h: 34, color: "#d2b8a3", match: /chapman|\bchp\b/i },
+  { code: "BID", name: "Biddulph Hall", lat: 43.81736, lng: -111.78496, w: 56, h: 30, color: "#cdb9a0", match: /biddulph|\bbid\b/i },
+  { code: "RIG", name: "Rigby Hall", lat: 43.81701, lng: -111.78443, w: 56, h: 30, color: "#b8c4b0", match: /rigby|\brig\b/i },
+  { code: "TAY", name: "Taylor Building", lat: 43.81696, lng: -111.78249, w: 72, h: 40, color: "#d1c2a6", match: /taylor|\btay\b/i, spire: true },
+  { code: "KIM", name: "Kimball Building", lat: 43.81709, lng: -111.78150, w: 66, h: 40, color: "#b7a3b8", match: /kimball|\bkim\b/i },
+  { code: "SHC", name: "Student Health Center", lat: 43.81679, lng: -111.77930, w: 62, h: 32, color: "#c7d3d9", match: /health|counsel|\bshc\b/i },
+  { code: "P", name: "Kimball Parking Lot", lat: 43.81745, lng: -111.77985, lot: true, match: /parking|\blot\b/i },
+  { code: "HIN", name: "Hinckley Building", lat: 43.81588, lng: -111.77987, w: 70, h: 36, color: "#bfa98f", match: /hinckley|\bhin\b/i },
+  { code: "AUS", name: "Austin Building", lat: 43.81584, lng: -111.78429, w: 74, h: 36, color: "#a4abb5", match: /austin|\baus\b/i },
+  { code: "BEN", name: "Benson Building", lat: 43.81540, lng: -111.78320, w: 72, h: 40, color: "#b3c2a2", match: /benson|\bben\b/i },
+  { code: "RKS", name: "Ricks Building", lat: 43.81483, lng: -111.78100, w: 66, h: 36, color: "#d0b48c", match: /\bricks building\b|\brks\b/i },
+  { code: "STC", name: "Science & Technology Center", lat: 43.81457, lng: -111.78428, w: 88, h: 44, color: "#8fa9c2", match: /\bstc\b|science|technology/i },
+].map((b) => ({ ...b, x: mapX(b.lng), y: mapY(b.lat) }));
+
+const ROADS = {
+  secondSouth: mapY(43.8219),
+  viking: mapY(43.81765),
+  centerSt: mapX(-111.78370),
+  secondEast: mapX(-111.77895),
+  firstWest: mapX(-111.78655),
+};
+
+function campusSvg(tag, attrs, parent) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => {
+    if (v !== null && v !== undefined) el.setAttribute(k, v);
+  });
+  if (parent) parent.append(el);
+  return el;
+}
+
+function seeded(seed) {
+  return () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+}
+
+function shade(hex, amount) {
+  const n = parseInt(hex.slice(1), 16);
+  const c = (v) => Math.max(0, Math.min(255, v + amount));
+  return "rgb(" + c(n >> 16) + "," + c((n >> 8) & 255) + "," + c(n & 255) + ")";
+}
+
+function drawCampusBase(svg) {
+  const defs = campusSvg("defs", {}, svg);
+  const pat = campusSvg("pattern", { id: "lot-lines", width: 12, height: 12, patternUnits: "userSpaceOnUse" }, defs);
+  campusSvg("rect", { width: 12, height: 12, fill: "#c9ced2" }, pat);
+  campusSvg("line", { x1: 0, y1: 0, x2: 0, y2: 12, stroke: "#fff", "stroke-width": 2 }, pat);
+
+  campusSvg("rect", { x: 0, y: 0, width: MAP_W, height: MAP_H, rx: 28, class: "cm-grass" }, svg);
+
+  // Rexburg city canal: runs between the stadium and Hart, then south-west.
+  campusSvg("path", {
+    d: `M${mapX(-111.7849)} -10 C ${mapX(-111.7851)} ${mapY(43.8213)}, ${mapX(-111.7856)} ${mapY(43.8203)}, ${mapX(-111.7860)} ${mapY(43.8201)} S ${mapX(-111.7866)} ${mapY(43.8193)}, -10 ${mapY(43.8185)}`,
+    class: "cm-water",
+  }, svg);
+
+  const roads = campusSvg("g", { class: "cm-roads" }, svg);
+  [
+    `M0 ${ROADS.secondSouth} H${MAP_W}`,
+    `M0 ${ROADS.viking} H${MAP_W}`,
+    `M${ROADS.centerSt} ${ROADS.viking} V${MAP_H}`,
+    `M${ROADS.secondEast} 0 V${MAP_H}`,
+    `M${ROADS.firstWest} 0 V${MAP_H}`,
+  ].forEach((d) => campusSvg("path", { d }, roads));
+
+  // Thomas E. Ricks Gardens
+  const gx = mapX(-111.78147);
+  const gy = mapY(43.81548);
+  campusSvg("rect", { x: gx - 62, y: gy - 34, width: 124, height: 68, rx: 18, class: "cm-garden" }, svg);
+  const gl = campusSvg("text", { x: gx, y: gy + 5, class: "cm-place" }, svg);
+  gl.textContent = "Ricks Gardens";
+
+  // Walkways between neighbouring buildings (animated dashes)
+  const byCode = Object.fromEntries(CAMPUS.map((b) => [b.code, b]));
+  const walks = campusSvg("g", { class: "cm-walks" }, svg);
+  [
+    ["SNO", "SPO"], ["SPO", "CLK"], ["SPO", "ROM"], ["ROM", "MCK"], ["CLK", "SMI"],
+    ["MCK", "MC"], ["SMI", "MC"], ["SMI", "CHP"], ["MC", "TAY"], ["MC", "KIM"],
+    ["MC", "BCTR"], ["BCTR", "HFC"], ["TAY", "RIG"], ["RIG", "BID"], ["KIM", "SHC"],
+    ["TAY", "BEN"], ["RIG", "AUS"], ["AUS", "STC"], ["BEN", "RKS"], ["SHC", "HIN"],
+  ].forEach(([a, b]) => {
+    const A = byCode[a];
+    const B = byCode[b];
+    const mx = (A.x + B.x) / 2 + (A.y - B.y) * 0.12;
+    const my = (A.y + B.y) / 2 + (B.x - A.x) * 0.12;
+    campusSvg("path", { d: `M${A.x} ${A.y} Q ${mx} ${my} ${B.x} ${B.y}` }, walks);
+  });
+
+  [["Viking Dr", mapX(-111.7864) + 14, ROADS.viking - 7], ["E 2nd S", mapX(-111.7808), ROADS.secondSouth - 7],
+   ["S Center St", ROADS.centerSt - 7, mapY(43.8142), -90], ["S 2nd E", ROADS.secondEast - 7, mapY(43.8160), -90]]
+    .forEach(([t, x, y, r]) => {
+      const el = campusSvg("text", { x, y, class: "cm-street", transform: r ? `rotate(${r} ${x} ${y})` : null }, svg);
+      el.textContent = t;
+    });
+
+  // Trees, kept clear of buildings, roads and the garden.
+  const rand = seeded(11);
+  const trees = campusSvg("g", { class: "cm-trees" }, svg);
+  let placed = 0;
+
+  for (let tries = 0; tries < 2500 && placed < 120; tries += 1) {
+    const x = 18 + rand() * (MAP_W - 36);
+    const y = 18 + rand() * (MAP_H - 36);
+    const nearBuilding = CAMPUS.some((b) => {
+      const w = b.stadium ? 120 : b.lot ? 80 : b.w;
+      const h = b.stadium ? 150 : b.lot ? 60 : b.h;
+      return Math.abs(b.x - x) < w / 2 + 16 && y > b.y - h / 2 - 50 && y < b.y + h / 2 + 18;
+    });
+    const onRoad = [ROADS.secondSouth, ROADS.viking].some((r) => Math.abs(y - r) < 18) ||
+      [ROADS.secondEast, ROADS.firstWest].some((r) => Math.abs(x - r) < 18) ||
+      (Math.abs(x - ROADS.centerSt) < 18 && y > ROADS.viking);
+    const inGarden = Math.abs(x - gx) < 75 && Math.abs(y - gy) < 45;
+    if (nearBuilding || onRoad || inGarden) continue;
+
+    const r = 6 + rand() * 7;
+    const t = campusSvg("g", { class: "cm-tree", style: "--d:" + (rand() * 3).toFixed(2) + "s" }, trees);
+    campusSvg("ellipse", { cx: x + 3, cy: y + r * 0.8, rx: r, ry: r * 0.45, class: "cm-shadow" }, t);
+    campusSvg("circle", { cx: x, cy: y, r, fill: rand() > 0.5 ? "#5f9a5b" : "#4f8a55" }, t);
+    campusSvg("circle", { cx: x - r * 0.3, cy: y - r * 0.3, r: r * 0.45, fill: "#ffffff22" }, t);
+    placed += 1;
+  }
+}
+
+function drawBuilding(group, b) {
+  if (b.stadium) {
+    campusSvg("rect", { x: b.x - 52, y: b.y - 74, width: 104, height: 148, rx: 52, class: "cm-track" }, group);
+    campusSvg("rect", { x: b.x - 36, y: b.y - 58, width: 72, height: 116, rx: 36, class: "cm-field" }, group);
+    campusSvg("line", { x1: b.x - 36, y1: b.y, x2: b.x + 36, y2: b.y, stroke: "#ffffff88", "stroke-width": 2 }, group);
+    return;
+  }
+
+  if (b.lot) {
+    campusSvg("rect", { x: b.x - 40, y: b.y - 28, width: 80, height: 56, rx: 6, fill: "url(#lot-lines)", class: "cm-body" }, group);
+    const p = campusSvg("text", { x: b.x, y: b.y + 9, class: "cm-lot" }, group);
+    p.textContent = "P";
+    return;
+  }
+
+  const { x, y, w, h, color } = b;
+  const depth = 14;
+  campusSvg("ellipse", { cx: x + 5, cy: y + h / 2 + 3, rx: w / 2 + 6, ry: 7, class: "cm-shadow" }, group);
+  campusSvg("rect", { x: x - w / 2, y: y - h / 2, width: w, height: h, rx: 3, fill: color, class: "cm-body" }, group);
+  campusSvg("path", {
+    d: `M${x - w / 2} ${y - h / 2} L${x - w / 2 + 8} ${y - h / 2 - depth} L${x + w / 2 + 8} ${y - h / 2 - depth} L${x + w / 2} ${y - h / 2} Z`,
+    fill: shade(color, -28),
+  }, group);
+  campusSvg("path", {
+    d: `M${x + w / 2} ${y - h / 2} L${x + w / 2 + 8} ${y - h / 2 - depth} L${x + w / 2 + 8} ${y + h / 2 - depth} L${x + w / 2} ${y + h / 2} Z`,
+    fill: shade(color, -45),
+  }, group);
+
+  const cols = Math.max(2, Math.floor(w / 16));
+  for (let c = 0; c < cols; c += 1) {
+    campusSvg("rect", {
+      x: x - w / 2 + 6 + c * ((w - 12) / cols), y: y - h / 2 + 6,
+      width: (w - 12) / cols - 4, height: 7, rx: 1.5, class: "cm-window",
+    }, group);
+  }
+
+  // Building code painted on the wall, like the campus abbreviations.
+  const code = campusSvg("text", { x, y: y + h / 2 - 7, class: "cm-code" }, group);
+  code.textContent = b.code;
+
+  if (b.spire) {
+    campusSvg("path", {
+      d: `M${x - 5} ${y - h / 2 - depth + 2} L${x + 2} ${y - h / 2 - depth - 34} L${x + 9} ${y - h / 2 - depth + 2} Z`,
+      fill: "#f2efe6", stroke: "#cfc7b3",
+    }, group);
+  }
+}
+
 function renderCampusMap() {
   const map = document.querySelector("#campus-map");
 
@@ -557,12 +895,14 @@ function renderCampusMap() {
   }
 
   const counts = new Map();
+  let other = 0;
 
   allItems().forEach((item) => {
     const name = buildingName(item.location);
-
-    if (name) {
+    if (CAMPUS.some((b) => b.name === name)) {
       counts.set(name, (counts.get(name) || 0) + 1);
+    } else {
+      other += 1;
     }
   });
 
@@ -570,72 +910,232 @@ function renderCampusMap() {
     activeBuilding = null;
   }
 
+  const firstDraw = !map.classList.contains("illustrated");
+  map.classList.add("illustrated");
   map.replaceChildren();
 
-  [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .forEach(([name, count]) => {
-      const building = document.createElement("button");
-      building.type = "button";
-      building.className =
-        "building" + (name === activeBuilding ? " active" : "");
-      building.setAttribute("aria-pressed", String(name === activeBuilding));
+  const wrap = document.createElement("div");
+  wrap.className = "cm-wrap";
 
-      const pin = document.createElement("span");
-      pin.className = "map-pin";
-      pin.append(svgIcon("pin"));
-      pin.setAttribute("aria-hidden", "true");
+  const svg = campusSvg("svg", {
+    viewBox: `0 0 ${MAP_W} ${MAP_H}`,
+    class: "campus-svg",
+    role: "group",
+    "aria-label": "Illustrated BYU-Idaho campus map. Pins show how many items were reported at each building.",
+  });
+  drawCampusBase(svg);
 
-      const label = document.createElement("span");
-      label.textContent = name;
+  const tip = document.createElement("div");
+  tip.className = "cm-tip";
+  tip.hidden = true;
 
-      const total = document.createElement("span");
-      total.className = "pin-count";
-      total.textContent = count + (count === 1 ? " item" : " items");
+  const showTip = (b, count) => {
+    tip.hidden = false;
+    tip.textContent = b.name + (count ? " · " + count + (count === 1 ? " item" : " items") : " · no reports");
+    tip.style.left = (b.x / MAP_W) * 100 + "%";
+    tip.style.top = ((b.y - (b.h || 60) / 2 - 22) / MAP_H) * 100 + "%";
+  };
 
-      building.append(pin, label, total);
-      building.addEventListener("click", () => {
-        activeBuilding = activeBuilding === name ? null : name;
-        renderItems();
-      });
+  // Draw from north to south so nearer buildings overlap farther ones.
+  const layer = campusSvg("g", {}, svg);
+  const pins = campusSvg("g", { class: "cm-pins" }, svg);
 
-      map.append(building);
+  [...CAMPUS].sort((a, b) => a.y - b.y).forEach((b) => {
+    const count = counts.get(b.name) || 0;
+    const g = campusSvg("g", {
+      class: "cm-building" + (count ? " has-items" : "") + (b.name === activeBuilding ? " active" : ""),
+      tabindex: 0,
+      role: count ? "button" : "img",
+      "aria-label": b.name + ": " + count + (count === 1 ? " item" : " items"),
+      "aria-pressed": count ? String(b.name === activeBuilding) : null,
+    }, layer);
+
+    drawBuilding(g, b);
+
+    g.addEventListener("mouseenter", () => showTip(b, count));
+    g.addEventListener("focus", () => showTip(b, count));
+    g.addEventListener("mouseleave", () => { tip.hidden = true; });
+    g.addEventListener("blur", () => { tip.hidden = true; });
+
+    g.addEventListener("touchstart", () => {
+      showTip(b, count);
+      clearTimeout(tip.hideTimer);
+      tip.hideTimer = setTimeout(() => { tip.hidden = true; }, 1800);
+    }, { passive: true });
+
+    if (!count) {
+      return;
+    }
+
+    const toggle = () => {
+      activeBuilding = activeBuilding === b.name ? null : b.name;
+      renderItems();
+      document.querySelector("#item-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    g.addEventListener("click", toggle);
+    g.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggle();
+      }
     });
 
-  const hint = document.querySelector("#map-hint");
+    // Pin with the count, dropped above the roof. Clicking the pin works too.
+    const top = b.stadium ? b.y - 74 : b.lot ? b.y - 28 : b.y - b.h / 2 - 14;
+    const pin = campusSvg("g", {
+      class: "cm-pin" + (b.name === activeBuilding ? " active" : ""),
+      style: "--drop:" + (b.y / MAP_H * 0.8).toFixed(2) + "s",
+    }, pins);
+    const inner = campusSvg("g", { class: "cm-pin-inner" }, pin);
+    campusSvg("path", {
+      d: `M${b.x} ${top - 2} c -12 -14 -15 -20 -15 -27 a 15 15 0 0 1 30 0 c 0 7 -3 13 -15 27 z`,
+      class: "cm-pin-shape",
+    }, inner);
+    const ct = campusSvg("text", { x: b.x, y: top - 24, class: "cm-pin-count" }, inner);
+    ct.textContent = String(count);
+    pin.addEventListener("click", toggle);
+    pin.addEventListener("mouseenter", () => showTip(b, count));
+    pin.addEventListener("mouseleave", () => { tip.hidden = true; });
+  });
 
+  const compass = campusSvg("g", { class: "cm-compass", transform: `translate(${MAP_W - 44} ${MAP_H - 44})` }, svg);
+  campusSvg("circle", { r: 20 }, compass);
+  const n = campusSvg("text", { y: 5 }, compass);
+  n.textContent = "N";
+
+  wrap.append(svg, tip);
+  map.append(wrap);
+
+  // On phones the map scrolls sideways: start centred on the middle of campus.
+  if (wrap.scrollWidth > wrap.clientWidth) {
+    requestAnimationFrame(() => {
+      const mc = CAMPUS.find((b) => b.name === activeBuilding) || CAMPUS.find((b) => b.code === "MC");
+      const ratio = wrap.scrollWidth / MAP_W;
+      wrap.scrollLeft = mc.x * ratio - wrap.clientWidth / 2;
+    });
+  }
+
+  // Pins drop in the first time the map scrolls into view.
+  if (firstDraw && "IntersectionObserver" in window) {
+    map.classList.add("pins-waiting");
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        map.classList.remove("pins-waiting");
+        io.disconnect();
+      }
+    }, { threshold: 0.25 });
+    io.observe(map);
+  }
+
+  // Building key: every building, code and live count.
+  const key = document.createElement("details");
+  key.className = "cm-key";
+  const sum = document.createElement("summary");
+  sum.textContent = "Building key (" + CAMPUS.length + " buildings)";
+  const list = document.createElement("ul");
+  [...CAMPUS].sort((a, b) => a.name.localeCompare(b.name)).forEach((b) => {
+    const li = document.createElement("li");
+    const c = document.createElement("strong");
+    c.textContent = b.code;
+    const nm = document.createElement("span");
+    nm.textContent = b.name;
+    const ct = document.createElement("em");
+    const count = counts.get(b.name) || 0;
+    ct.textContent = count ? String(count) : "–";
+    if (count) li.className = "has-items";
+    li.append(c, nm, ct);
+    list.append(li);
+  });
+  key.append(sum, list);
+  map.append(key);
+
+  if (other) {
+    const legend = document.createElement("p");
+    legend.className = "cm-legend";
+    legend.textContent = other + " item" + (other === 1 ? "" : "s") + " reported somewhere not on the map.";
+    map.append(legend);
+  }
+
+  const hint = document.querySelector("#map-hint");
   if (hint) {
     hint.textContent = activeBuilding
       ? "Showing " + activeBuilding + " · tap again to clear"
-      : "Tap a building to filter";
+      : "Tap a pin to see what was reported there";
   }
 }
 
 // Count numbers up from their current value.
+// Rolling-digit counter: each digit is a 0-9 strip that slides into place.
 function countTo(element, target) {
   if (!element) {
     return;
   }
 
-  const start = Number(element.textContent) || 0;
-
-  if (start === target) {
+  if (element.dataset.value === String(target)) {
     return;
   }
 
-  const steps = 20;
-  let step = 0;
+  element.dataset.value = String(target);
+  element.setAttribute("aria-label", String(target));
 
-  clearInterval(element._timer);
-  element._timer = setInterval(() => {
-    step += 1;
-    element.textContent = Math.round(start + ((target - start) * step) / steps);
+  const digits = String(target).split("");
+  element.replaceChildren();
+  element.classList.add("odometer");
 
-    if (step >= steps) {
-      clearInterval(element._timer);
+  digits.forEach((digit, index) => {
+    const slot = document.createElement("span");
+    slot.className = "odo-slot";
+    slot.setAttribute("aria-hidden", "true");
+
+    const strip = document.createElement("span");
+    strip.className = "odo-strip";
+    for (let n = 0; n <= 9; n += 1) {
+      const d = document.createElement("span");
+      d.textContent = String(n);
+      strip.append(d);
     }
-  }, 30);
+    strip.style.transitionDelay = index * 120 + "ms";
+
+    slot.append(strip);
+    element.append(slot);
+
+    // Start at 0, then roll to the real digit on the next frame.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        strip.style.transform = "translateY(-" + Number(digit) * 10 + "%)";
+      }),
+    );
+  });
 }
+
+// Fade sections up as they scroll into view.
+(function revealSections() {
+  const targets = document.querySelectorAll(
+    ".compare-section, .compare-card, .home-faq, .steps-grid article",
+  );
+
+  if (!("IntersectionObserver" in window)) {
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("revealed");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.2 },
+  );
+
+  targets.forEach((el, i) => {
+    el.classList.add("reveal");
+    el.style.setProperty("--reveal-delay", (i % 3) * 120 + "ms");
+    observer.observe(el);
+  });
+})();
 
 function updateStats() {
   if (useSheet && sheetItems === null) {
