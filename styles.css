@@ -2784,3 +2784,5 @@ h2 {
   .dialog[open], .contact-done { animation: none; }
 }
 .contact-box [hidden] { display: none !important; }
+
+.item-note.copied { color: var(--green-dark, #2f5a4f); font-weight: 700; }

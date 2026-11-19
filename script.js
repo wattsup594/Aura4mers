@@ -770,6 +770,31 @@ function buildContactForm(item) {
   return wrap;
 }
 
+// Copy text to the clipboard; resolves to whether it worked.
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (error) {
+    // Older phones: copy through a temporary text box.
+    const box = document.createElement("textarea");
+    box.value = text;
+    box.setAttribute("readonly", "");
+    box.style.position = "fixed";
+    box.style.opacity = "0";
+    document.body.append(box);
+    box.select();
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch (e) {
+      ok = false;
+    }
+    box.remove();
+    return ok;
+  }
+}
+
 // Used only until the updated Sheet script is deployed (it still sends emails).
 function buildEmailFallback(item) {
   const isClaim = item.type === "found";
@@ -788,23 +813,21 @@ function buildEmailFallback(item) {
     "&body=" + encodeURIComponent(bodyText);
   contact.textContent = isClaim ? "✋ This is mine" : "🙌 I found this";
 
-  const copy = document.createElement("button");
-  copy.type = "button";
-  copy.className = "btn btn-outline contact-copy";
-  copy.textContent = "Copy email address";
-  copy.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(item.email);
-      copy.textContent = "Copied ✓";
-    } catch (error) {
-      copy.textContent = item.email;
-    }
-  });
-
   const hint = document.createElement("p");
   hint.className = "item-note";
-  hint.textContent = "Opens an email to " + item.email + ".";
-  return [contact, copy, hint];
+  hint.textContent = "Opens your email app and copies " + item.email + ".";
+
+  // One tap: copy the address (in case no email app opens) and open the email.
+  contact.addEventListener("click", () => {
+    copyText(item.email).then((copied) => {
+      hint.textContent = copied
+        ? "✓ Email copied: " + item.email + ". Opening your email app…"
+        : "Email: " + item.email;
+      hint.classList.add("copied");
+    });
+  });
+
+  return [contact, hint];
 }
 
 if (itemDialog) {
