@@ -20,6 +20,8 @@ const useSheet = SHEET_API_URL !== "";
 // Items loaded from the shared Sheet (null until the first load finishes).
 let sheetItems = null;
 let sheetError = false;
+// 2+ means the Sheet script relays messages privately (no emails on the site).
+let sheetApiVersion = 1;
 
 // Sample items shown only when the Sheet is not connected.
 const defaultItems = [
@@ -126,6 +128,7 @@ async function loadSheetItems() {
     }
 
     sheetItems = result.items;
+    sheetApiVersion = Number(result.apiVersion) || 1;
     sheetError = false;
   } catch (error) {
     sheetError = true;
@@ -559,26 +562,10 @@ function openItemDialog(item) {
     note.className = "item-note";
     note.textContent = "🎉 This item is already back with its owner.";
     actions.append(note);
+  } else if (useSheet && sheetApiVersion >= 2 && item.hasContact) {
+    actions.append(buildContactForm(item));
   } else if (item.email) {
-    const contact = document.createElement("a");
-    contact.className = "btn btn-primary";
-    const subject =
-      item.type === "found"
-        ? "I think the " + item.name + " you found is mine"
-        : "I may have found your " + item.name;
-    contact.href =
-      "mailto:" +
-      encodeURIComponent(item.email).replace("%40", "@") +
-      "?subject=" +
-      encodeURIComponent(subject + " (Lost & Found)");
-    contact.textContent =
-      item.type === "found" ? "✋ This is mine" : "🙌 I found this";
-    actions.append(contact);
-
-    const hint = document.createElement("p");
-    hint.className = "item-note";
-    hint.textContent = "Opens an email to " + item.email + ".";
-    actions.append(hint);
+    actions.append(...buildEmailFallback(item));
   } else {
     const note = document.createElement("p");
     note.className = "item-note";
@@ -587,6 +574,237 @@ function openItemDialog(item) {
   }
 
   itemDialog.showModal();
+}
+
+// ===== Private contact form (the reporter's email is never shown) =====
+function contactField(labelText, control, hintText) {
+  const label = document.createElement("label");
+  label.className = "contact-field";
+  const span = document.createElement("span");
+  span.textContent = labelText;
+  label.append(span, control);
+
+  if (hintText) {
+    const hint = document.createElement("small");
+    hint.className = "field-hint";
+    hint.textContent = hintText;
+    label.append(hint);
+  }
+
+  return label;
+}
+
+function buildContactForm(item) {
+  const isClaim = item.type === "found";
+  const wrap = document.createElement("div");
+  wrap.className = "contact-box";
+
+  const open = document.createElement("button");
+  open.type = "button";
+  open.className = "btn btn-primary contact-open";
+  open.textContent = isClaim ? "✋ This is mine" : "🙌 I found this";
+
+  const lead = document.createElement("p");
+  lead.className = "item-note";
+  lead.textContent = isClaim
+    ? "Send the finder a private message. Their email stays hidden, and they'll reply to yours."
+    : "Send the owner a private message. Their email stays hidden, and they'll reply to yours.";
+
+  const form = document.createElement("form");
+  form.className = "contact-form";
+  form.hidden = true;
+  form.noValidate = true;
+
+  const name = document.createElement("input");
+  name.name = "name";
+  name.required = true;
+  name.maxLength = 60;
+  name.autocomplete = "name";
+  name.placeholder = "Your name";
+
+  const email = document.createElement("input");
+  email.name = "email";
+  email.type = "email";
+  email.required = true;
+  email.maxLength = 120;
+  email.autocomplete = "email";
+  email.inputMode = "email";
+  email.placeholder = "you@byui.edu";
+
+  const detail = document.createElement("textarea");
+  detail.name = "detail";
+  detail.required = true;
+  detail.rows = 2;
+  detail.maxLength = 500;
+  detail.placeholder = isClaim
+    ? "e.g. the lock screen photo, a sticker, what's inside"
+    : "e.g. under a chair in room 120, Tuesday afternoon";
+
+  const message = document.createElement("textarea");
+  message.name = "message";
+  message.required = true;
+  message.rows = 3;
+  message.maxLength = 1500;
+  message.value = isClaim
+    ? "Hi! I think the " + item.name + " you found at " + item.location + " is mine. When and where could I pick it up?"
+    : "Hi! I think I found your " + item.name + ". Let me know a good time and place to give it back.";
+
+  // Hidden from people; bots that fill it in are ignored by the script.
+  const trap = document.createElement("input");
+  trap.name = "website";
+  trap.tabIndex = -1;
+  trap.autocomplete = "off";
+  trap.className = "contact-trap";
+  trap.setAttribute("aria-hidden", "true");
+
+  const send = document.createElement("button");
+  send.type = "submit";
+  send.className = "btn btn-primary";
+  send.textContent = "Send message";
+
+  const feedback = document.createElement("p");
+  feedback.className = "form-feedback";
+  feedback.setAttribute("role", "status");
+  feedback.setAttribute("aria-live", "polite");
+
+  const safety = document.createElement("p");
+  safety.className = "contact-safety";
+  safety.textContent = "🛡️ Meet somewhere public on campus, or hand it in at a staffed front desk.";
+
+  form.append(
+    contactField("Your name *", name),
+    contactField("Your email *", email, "The other person will reply here."),
+    contactField(
+      isClaim ? "Prove it's yours *" : "Where did you find it? *",
+      detail,
+      isClaim ? "Describe something that isn't in the listing, so the finder can check." : "",
+    ),
+    contactField("Message *", message),
+    trap,
+    send,
+    feedback,
+    safety,
+  );
+
+  form.addEventListener("input", () => {
+    if (feedback.classList.contains("error")) {
+      feedback.textContent = "";
+      feedback.className = "form-feedback";
+    }
+  });
+
+  open.addEventListener("click", () => {
+    open.hidden = true;
+    lead.hidden = true;
+    form.hidden = false;
+    name.focus();
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const values = {
+      name: name.value.trim(),
+      email: email.value.trim(),
+      detail: detail.value.trim(),
+      message: message.value.trim(),
+    };
+
+    const missing = [name, email, detail, message].find((field) => !field.value.trim());
+    if (missing) {
+      feedback.textContent = "Please fill in every field.";
+      feedback.className = "form-feedback error";
+      missing.focus();
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
+      feedback.textContent = "Please enter a valid email address.";
+      feedback.className = "form-feedback error";
+      email.focus();
+      return;
+    }
+
+    send.disabled = true;
+    send.textContent = "Sending…";
+    feedback.textContent = "";
+    feedback.className = "form-feedback";
+
+    try {
+      // A plain-text body avoids a CORS preflight, which Apps Script does not answer.
+      const response = await fetch(SHEET_API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "contact",
+          itemId: item.id,
+          website: trap.value,
+          ...values,
+        }),
+      });
+      const result = await response.json();
+
+      if (!result.ok) {
+        throw new Error(result.error || "The message could not be sent.");
+      }
+
+      const done = document.createElement("div");
+      done.className = "contact-done";
+      const title = document.createElement("strong");
+      title.textContent = "✅ Message sent!";
+      const text = document.createElement("p");
+      text.textContent =
+        (isClaim ? "The finder" : "The owner") +
+        " will reply to " + values.email + ". Check your spam folder too, just in case.";
+      done.append(title, text);
+      wrap.replaceChildren(done);
+      celebrate();
+    } catch (error) {
+      feedback.textContent = error.message || "Could not send. Please try again.";
+      feedback.className = "form-feedback error";
+      send.disabled = false;
+      send.textContent = "Send message";
+    }
+  });
+
+  wrap.append(open, lead, form);
+  return wrap;
+}
+
+// Used only until the updated Sheet script is deployed (it still sends emails).
+function buildEmailFallback(item) {
+  const isClaim = item.type === "found";
+  const subject = isClaim
+    ? "I think the " + item.name + " you found is mine"
+    : "I may have found your " + item.name;
+  const bodyText = isClaim
+    ? "Hi! I think the " + item.name + " you found at " + item.location + " is mine.\n\nSomething that proves it's mine: \n\nWhen and where could I pick it up?"
+    : "Hi! I think I found your " + item.name + ".\n\nWhere I found it: \n\nLet me know a good time and place to give it back.";
+
+  const contact = document.createElement("a");
+  contact.className = "btn btn-primary";
+  contact.href =
+    "mailto:" + encodeURIComponent(item.email).replace("%40", "@") +
+    "?subject=" + encodeURIComponent(subject + " (Lost & Found)") +
+    "&body=" + encodeURIComponent(bodyText);
+  contact.textContent = isClaim ? "✋ This is mine" : "🙌 I found this";
+
+  const copy = document.createElement("button");
+  copy.type = "button";
+  copy.className = "btn btn-outline contact-copy";
+  copy.textContent = "Copy email address";
+  copy.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(item.email);
+      copy.textContent = "Copied ✓";
+    } catch (error) {
+      copy.textContent = item.email;
+    }
+  });
+
+  const hint = document.createElement("p");
+  hint.className = "item-note";
+  hint.textContent = "Opens an email to " + item.email + ".";
+  return [contact, copy, hint];
 }
 
 if (itemDialog) {
